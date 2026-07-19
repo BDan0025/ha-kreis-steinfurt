@@ -2,9 +2,11 @@
   "domain": "kreis_steinfurt",
   "name": "Kreis Steinfurt Einsätze",
   "version": "0.1.0",
-  "documentation": "https://github.com/DEIN_USERNAME/ha-kreis-steinfurt",
-  "requirements": [],
+  "documentation": "https://github.com/BDan0025/ha-kreis-steinfurt",
+  "requirements": [
+    "beautifulsoup4"
+  ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
   "config_flow": true
 }
