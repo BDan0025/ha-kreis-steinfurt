@@ -1,7 +1,6 @@
 """Config flow for Kreis Steinfurt integration."""
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 
 from .const import DOMAIN, NAME
 
@@ -24,5 +23,5 @@ class KreisSteinfurtConfigFlow(
             )
 
         return self.async_show_form(
-            step_id="user"
+            step_id="user",
         )
