@@ -17,14 +17,22 @@ Die Quelle enthält Einsätze der letzten 48 Stunden. Sie wird standardmäßig a
 
 ## Sensor
 
-Die Integration erstellt `sensor.kreis_steinfurt_einsaetze_…`. Sein Zustand ist
-die Anzahl aller von der Quelle gelisteten Einsätze. Die Attribute enthalten:
+Die Integration erstellt diese Übersichten:
 
-- `einsatzanzahl_letzte_48_stunden`
-- `laufende_einsaetze` – Zahl aller Einträge, deren Zustand nicht
-  `abgeschlossen` ist
-- `einsatznummern` und `orte`
-- `einsaetze` – Liste mit Einsatznummer, Einsatzart, Ort, Beginn und Zustand
+- `sensor.kreis_steinfurt_einsaetze` – Anzahl aller veröffentlichten Einsätze
+  der letzten 48 Stunden
+- `sensor.kreis_steinfurt_laufende_einsaetze` – Anzahl der Einträge, die nicht
+  als `abgeschlossen` markiert sind
+- `sensor.kreis_steinfurt_einsaetze_letzte_24_stunden` – Anzahl seit den
+  vergangenen 24 Stunden
+
+Zusätzlich entstehen dynamisch Sensoren für jeden Einsatz sowie jede in der
+Liste vorkommende Stadt. Ein Einsatzsensor hat den Status als Zustand und die
+Attribute `einsatznummer`, `einsatzart`, `ort`, `beginn`, `status`, `strasse`,
+`sachverhalt`, `latitude` und `longitude`. Straße, Sachverhalt und Koordinaten
+sind `null`, solange die öffentliche Quelle diese Angaben nicht veröffentlicht.
+Ein Einsatzsensor wird nicht gelöscht, sondern nach Ablauf der 48 Stunden als
+`unavailable` markiert. Damit bleibt sein Verlauf in Home Assistant erhalten.
 
 Die Angaben stammen ausschließlich von der veröffentlichten Liste des Kreises
 Steinfurt und können sich jederzeit ändern.

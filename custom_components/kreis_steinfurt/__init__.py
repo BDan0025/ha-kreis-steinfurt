@@ -2,6 +2,7 @@
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
 from .coordinator import KreisSteinfurtCoordinator
@@ -38,6 +39,28 @@ async def async_setup_entry(
         PLATFORMS,
     )
 
+    return True
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> bool:
+    """Migrate the original summary sensor to its stable entity ID."""
+    if entry.version >= 2:
+        return True
+
+    entity_registry = er.async_get(hass)
+    unique_id = f"{DOMAIN}_einsaetze_{entry.entry_id}"
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+
+    if entity_id is not None and entity_id != "sensor.kreis_steinfurt_einsaetze":
+        entity_registry.async_update_entity(
+            entity_id,
+            new_entity_id="sensor.kreis_steinfurt_einsaetze",
+        )
+
+    hass.config_entries.async_update_entry(entry, version=2)
     return True
 
 
