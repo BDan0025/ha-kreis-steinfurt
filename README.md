@@ -34,6 +34,14 @@ sind `null`, solange die öffentliche Quelle diese Angaben nicht veröffentlicht
 Ein Einsatzsensor wird nicht gelöscht, sondern nach Ablauf der 48 Stunden als
 `unavailable` markiert. Damit bleibt sein Verlauf in Home Assistant erhalten.
 
+## Dashboard-Beispiel
+
+Eine fertige Lovelace-Vorlage mit Übersicht und einer Einsatzliste für
+Ibbenbüren liegt in [`examples/lovelace_cards.yaml`](examples/lovelace_cards.yaml).
+Den YAML-Inhalt als **Manuelle Karte** in einem Home-Assistant-Dashboard
+einfügen. Für eine andere Stadt in der Markdown-Karte sowohl den Titel als auch
+die Entity-ID `sensor.kreis_steinfurt_einsaetze_ibbenbueren` anpassen.
+
 Die Angaben stammen ausschließlich von der veröffentlichten Liste des Kreises
 Steinfurt und können sich jederzeit ändern.
 

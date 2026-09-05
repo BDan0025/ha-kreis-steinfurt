@@ -1,0 +1,29 @@
+# Beispielkarten für ein Home-Assistant-Dashboard.
+
+# Übersicht aller Einsätze
+type: vertical-stack
+cards:
+  - type: entities
+    title: Kreis Steinfurt Einsätze
+    entities:
+      - entity: sensor.kreis_steinfurt_einsaetze
+        name: Einsätze (48 h)
+      - entity: sensor.kreis_steinfurt_laufende_einsaetze
+        name: Laufende Einsätze
+      - entity: sensor.kreis_steinfurt_einsaetze_letzte_24_stunden
+        name: Einsätze (24 h)
+
+  # Stadtname und Entity-ID bei Bedarf anpassen.
+  - type: markdown
+    title: Ibbenbüren – aktuelle Einsätze
+    content: |
+      {% set einsaetze = state_attr('sensor.kreis_steinfurt_einsaetze_ibbenbueren', 'einsaetze') or [] %}
+      {% if einsaetze | count > 0 %}
+      | Zeit | Einsatzart | Zustand |
+      | :--- | :--------- | :------ |
+      {% for e in einsaetze -%}
+      | {{ e.beginn[11:16] }} | **{{ e.einsatzart }}** | *{{ e.status }}* |
+      {% endfor %}
+      {% else %}
+      Aktuell keine gemeldeten Einsätze in Ibbenbüren.
+      {% endif %}
