@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import KreisSteinfurtCoordinator
 
 
@@ -18,11 +19,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up Kreis Steinfurt sensors."""
 
-    coordinator: KreisSteinfurtCoordinator = entry.runtime_data
+    coordinator: KreisSteinfurtCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
-            KreisSteinfurtStatusSensor(coordinator),
+            KreisSteinfurtStatusSensor(coordinator, entry.entry_id),
         ]
     )
 
@@ -34,16 +35,17 @@ class KreisSteinfurtStatusSensor(
     """Status sensor for Kreis Steinfurt."""
 
     _attr_has_entity_name = True
-    _attr_name = "Status"
-    _attr_unique_id = "kreis_steinfurt_status"
+    _attr_name = "Einsätze (48 h)"
     _attr_icon = "mdi:fire-truck"
 
     def __init__(
         self,
         coordinator: KreisSteinfurtCoordinator,
+        entry_id: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self._attr_unique_id = f"kreis_steinfurt_einsaetze_{entry_id}"
 
     @property
     def native_value(self) -> int:
@@ -59,12 +61,28 @@ class KreisSteinfurtStatusSensor(
 
         einsaetze = self.coordinator.data or []
 
+        laufende_einsaetze = [
+            einsatz for einsatz in einsaetze
+            if einsatz.zustand.casefold() != "abgeschlossen"
+        ]
+
         return {
-            "aktive_einsaetze": len(einsaetze),
+            "einsatzanzahl_letzte_48_stunden": len(einsaetze),
+            "laufende_einsaetze": len(laufende_einsaetze),
             "einsatznummern": [
                 e.einsatznr for e in einsaetze
             ],
             "orte": [
                 e.ort for e in einsaetze
+            ],
+            "einsaetze": [
+                {
+                    "einsatznr": e.einsatznr,
+                    "einsatzart": e.einsatzart,
+                    "ort": e.ort,
+                    "beginn": e.beginn.isoformat(),
+                    "zustand": e.zustand,
+                }
+                for e in einsaetze
             ],
         }

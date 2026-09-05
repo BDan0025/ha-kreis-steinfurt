@@ -1,41 +1,37 @@
-# ha-kreis-steinfurt
-Home Assistant integration for Kreis Steinfurt emergency incidents
+# Kreis Steinfurt Einsätze für Home Assistant
 
-https://github.com/BDan0025/ha-kreis-steinfurt
+Diese Custom Integration liest die öffentlich verfügbare Liste der
+[aktuellen Einsätze](https://www.kreis-steinfurt.de/kv_steinfurt/Kreisverwaltung/%C3%84mter/Amt%20f%C3%BCr%20Bev%C3%B6lkerungsschutz/Kreisleitstelle/Aktuelle%20Eins%C3%A4tze/)
+der Feuerwehren im Kreis Steinfurt aus.
 
+Die Quelle enthält Einsätze der letzten 48 Stunden. Sie wird standardmäßig alle
+60 Sekunden aktualisiert.
 
+## Installation
 
+1. Den Ordner `custom_components/kreis_steinfurt` nach
+   `<Home-Assistant-Konfiguration>/custom_components/kreis_steinfurt` kopieren.
+2. Home Assistant neu starten.
+3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen** nach
+   **Kreis Steinfurt Einsätze** suchen und einrichten.
 
-Aufbau
+## Sensor
 
-ha-kreis-steinfurt/
-│
-├── custom_components/
-│   └── kreis_steinfurt/
-│       ├── __init__.py
-│       ├── manifest.json
-│       ├── config_flow.py
-│       ├── coordinator.py
-│       ├── client.py          ← HTTP-Zugriff
-│       ├── parser.py          ← HTML → Modelle
-│       ├── models.py          ← Dataclasses
-│       ├── sensor.py
-│       ├── entity.py
-│       ├── const.py
-│       ├── diagnostics.py
-│       ├── strings.json
-│       ├── translations/
-│       │   ├── de.json
-│       │   └── en.json
-│       └── icons.json
-│
-├── tests/
-│   ├── sample_page.html
-│   ├── test_parser.py
-│   └── test_client.py
-│
-├── hacs.json
-├── README.md
-├── LICENSE
-├── pyproject.toml
-└── requirements_dev.txt
+Die Integration erstellt `sensor.kreis_steinfurt_einsaetze_…`. Sein Zustand ist
+die Anzahl aller von der Quelle gelisteten Einsätze. Die Attribute enthalten:
+
+- `einsatzanzahl_letzte_48_stunden`
+- `laufende_einsaetze` – Zahl aller Einträge, deren Zustand nicht
+  `abgeschlossen` ist
+- `einsatznummern` und `orte`
+- `einsaetze` – Liste mit Einsatznummer, Einsatzart, Ort, Beginn und Zustand
+
+Die Angaben stammen ausschließlich von der veröffentlichten Liste des Kreises
+Steinfurt und können sich jederzeit ändern.
+
+## Entwicklung
+
+```shell
+python -m pip install -r requirements_dev.txt
+python -m pytest
+```

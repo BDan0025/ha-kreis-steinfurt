@@ -1,0 +1,9 @@
+[project]
+name = "ha-kreis-steinfurt"
+version = "0.1.0"
+description = "Home Assistant integration for Kreis Steinfurt emergency incidents"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

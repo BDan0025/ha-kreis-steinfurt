@@ -3,9 +3,7 @@
   "name": "Kreis Steinfurt Einsätze",
   "version": "0.1.0",
   "documentation": "https://github.com/BDan0025/ha-kreis-steinfurt",
-  "requirements": [
-    "beautifulsoup4"
-  ],
+  "requirements": [],
   "dependencies": [],
   "codeowners": [],
   "config_flow": true
