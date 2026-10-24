@@ -27,12 +27,15 @@ async def async_setup_entry(
 ) -> bool:
     """Set up from config entry."""
 
-    coordinator = KreisSteinfurtCoordinator(hass)
+    coordinator = KreisSteinfurtCoordinator(hass, entry)
+
+    await coordinator.async_initialize()
 
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
@@ -40,6 +43,14 @@ async def async_setup_entry(
     )
 
     return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> None:
+    """Reload the integration after options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_migrate_entry(

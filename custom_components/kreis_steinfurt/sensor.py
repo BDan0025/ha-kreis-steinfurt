@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
@@ -49,15 +50,26 @@ async def async_setup_entry(
     coordinator: KreisSteinfurtCoordinator = hass.data[DOMAIN][entry.entry_id]
     known_incidents: set[str] = set()
     known_cities: set[str] = set()
+    incident_entities: dict[str, KreisSteinfurtEinsatzSensor] = {}
 
     def _new_dynamic_entities() -> list[SensorEntity]:
-        einsaetze = coordinator.data or []
+        einsaetze = [
+            einsatz
+            for einsatz in coordinator.retained_einsaetze
+            if einsatz.ort in coordinator.monitored_areas
+        ]
         new_entities: list[SensorEntity] = []
 
         for einsatz in einsaetze:
             if einsatz.einsatznr not in known_incidents:
                 known_incidents.add(einsatz.einsatznr)
-                new_entities.append(KreisSteinfurtEinsatzSensor(coordinator, entry.entry_id, einsatz.einsatznr))
+                incident_entity = KreisSteinfurtEinsatzSensor(
+                    coordinator,
+                    entry.entry_id,
+                    einsatz.einsatznr,
+                )
+                incident_entities[einsatz.einsatznr] = incident_entity
+                new_entities.append(incident_entity)
 
             city_id = slugify(einsatz.ort)
             if city_id not in known_cities:
@@ -65,6 +77,47 @@ async def async_setup_entry(
                 new_entities.append(KreisSteinfurtCitySensor(coordinator, entry.entry_id, einsatz.ort))
 
         return new_entities
+
+    def _remove_expired_entities() -> None:
+        """Remove entities once their configured retention has ended."""
+        entity_registry = er.async_get(hass)
+        for einsatznr, entity in tuple(incident_entities.items()):
+            if coordinator.get_retained_einsatz(einsatznr) is not None:
+                continue
+            if entity.entity_id is not None:
+                entity_registry.async_remove(entity.entity_id)
+            incident_entities.pop(einsatznr)
+            known_incidents.discard(einsatznr)
+
+    def _cleanup_registry() -> None:
+        """Remove retained incident entities no longer eligible after a restart."""
+        entity_registry = er.async_get(hass)
+        retained = [
+            einsatz
+            for einsatz in coordinator.retained_einsaetze
+            if einsatz.ort in coordinator.monitored_areas
+        ]
+        incident_unique_ids = {
+            f"{DOMAIN}_einsatz_{slugify(einsatz.einsatznr)}_{entry.entry_id}"
+            for einsatz in retained
+        }
+        city_unique_ids = {
+            f"{DOMAIN}_einsatzort_{slugify(einsatz.ort)}_{entry.entry_id}"
+            for einsatz in retained
+        }
+
+        for registry_entry in er.async_entries_for_config_entry(
+            entity_registry,
+            entry.entry_id,
+        ):
+            if registry_entry.unique_id.startswith(f"{DOMAIN}_einsatz_"):
+                if registry_entry.unique_id not in incident_unique_ids:
+                    entity_registry.async_remove(registry_entry.entity_id)
+            elif registry_entry.unique_id.startswith(f"{DOMAIN}_einsatzort_"):
+                if registry_entry.unique_id not in city_unique_ids:
+                    entity_registry.async_remove(registry_entry.entity_id)
+
+    _cleanup_registry()
 
     async_add_entities(
         [
@@ -76,6 +129,7 @@ async def async_setup_entry(
     )
 
     def _async_add_new_entities() -> None:
+        _remove_expired_entities()
         if new_entities := _new_dynamic_entities():
             async_add_entities(new_entities)
 
@@ -92,8 +146,12 @@ class _KreisSteinfurtCoordinatorSensor(
 
     @property
     def _einsaetze(self) -> list[Einsatz]:
-        """Return the currently published incidents."""
-        return self.coordinator.data or []
+        """Return current incidents in the configured monitoring area."""
+        return [
+            einsatz
+            for einsatz in self.coordinator.data or []
+            if einsatz.ort in self.coordinator.monitored_areas
+        ]
 
 
 class KreisSteinfurtEinsaetzeSensor(_KreisSteinfurtCoordinatorSensor):
@@ -227,11 +285,8 @@ class KreisSteinfurtEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
 
     @property
     def _einsatz(self) -> Einsatz | None:
-        """Return this sensor's incident while it is still published."""
-        return next(
-            (einsatz for einsatz in self._einsaetze if einsatz.einsatznr == self._einsatznr),
-            None,
-        )
+        """Return this sensor's incident while its retention is active."""
+        return self.coordinator.get_retained_einsatz(self._einsatznr)
 
     @property
     def available(self) -> bool:

@@ -45,6 +45,18 @@ die Entity-ID `sensor.kreis_steinfurt_einsaetze_ibbenbueren` anpassen.
 Die Angaben stammen ausschließlich von der veröffentlichten Liste des Kreises
 Steinfurt und können sich jederzeit ändern.
 
+## Einstellungen
+
+Unter **Einstellungen → Geräte & Dienste → Kreis Steinfurt Einsätze →
+Konfigurieren** lassen sich die überwachten Kommunen per Mehrfachauswahl festlegen.
+Die Übersichtssensoren sowie Einsatz- und Ortssensoren berücksichtigen nur diese
+Auswahl.
+
+Für einzelne Einsatz-Entities kann eine Aufbewahrung von 48 Stunden, 7 Tagen,
+einem Monat oder dauerhaft gewählt werden. Die Integration speichert dafür die
+zuletzt veröffentlichten Einsatzdetails lokal in Home Assistant und entfernt die
+Entity nach Ablauf der gewählten Zeit.
+
 ## Entwicklung
 
 ```shell

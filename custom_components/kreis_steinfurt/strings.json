@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Kreis Steinfurt Einsätze"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Überwachung einstellen",
+        "description": "Wähle die zu überwachenden Kommunen und die Aufbewahrungsdauer einzelner Einsatz-Entities.",
+        "data": {
+          "retention": "Einsatz-Entities löschen nach",
+          "areas": "Überwachte Kommunen"
+        }
+      }
+    }
+  },
+  "selector": {
+    "retention": {
+      "options": {
+        "48_hours": "48 Stunden",
+        "7_days": "7 Tage",
+        "30_days": "1 Monat",
+        "never": "Nie"
+      }
+    }
+  }
+}
