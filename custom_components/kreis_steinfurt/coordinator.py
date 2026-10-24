@@ -14,6 +14,10 @@ from homeassistant.helpers.update_coordinator import (
 from .client import KreisSteinfurtClient
 from .const import (
     CONF_AREAS,
+    CONF_ENABLE_CITY_LAST_INCIDENT,
+    CONF_ENABLE_CITY_SUMMARIES,
+    CONF_ENABLE_INCIDENT_ENTITIES,
+    CONF_INCLUDE_LIST_ATTRIBUTES,
     CONF_INCIDENT_TYPES,
     CONF_RETENTION,
     CONF_KARTENPOSITION,
@@ -60,6 +64,26 @@ class KreisSteinfurtCoordinator(DataUpdateCoordinator):
     def monitored_areas(self) -> set[str]:
         """Return the currently selected Kreis Steinfurt municipalities."""
         return set(self._entry.options.get(CONF_AREAS, KREIS_STEINFURT_AREAS))
+
+    @property
+    def incident_entities_enabled(self) -> bool:
+        """Return whether individual incident entities are enabled."""
+        return self._entry.options.get(CONF_ENABLE_INCIDENT_ENTITIES, True)
+
+    @property
+    def city_summaries_enabled(self) -> bool:
+        """Return whether per-city summary entities are enabled."""
+        return self._entry.options.get(CONF_ENABLE_CITY_SUMMARIES, True)
+
+    @property
+    def city_last_incident_enabled(self) -> bool:
+        """Return whether per-city latest-incident entities are enabled."""
+        return self._entry.options.get(CONF_ENABLE_CITY_LAST_INCIDENT, True)
+
+    @property
+    def list_attributes_enabled(self) -> bool:
+        """Return whether detailed incident lists are exposed as attributes."""
+        return self._entry.options.get(CONF_INCLUDE_LIST_ATTRIBUTES, True)
 
     @property
     def retention(self) -> str:

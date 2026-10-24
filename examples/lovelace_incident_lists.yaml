@@ -7,11 +7,11 @@ cards:
     entities:
       - entity: sensor.kreis_steinfurt_einsaetze
         name: Aktuell veröffentlichte Einsätze
-      - entity: sensor.kreis_steinfurt_laufende_einsaetze
+      - entity: sensor.kreis_steinfurt_laufende_einsatze
         name: Aktive Alarme
-      - entity: sensor.kreis_steinfurt_einsaetze_heute
+      - entity: sensor.kreis_steinfurt_einsatze_heute
         name: Einsätze heute
-      - entity: sensor.kreis_steinfurt_einsaetze_letzte_7_tage
+      - entity: sensor.kreis_steinfurt_einsatze_letzte_7_tage
         name: Einsätze letzte 7 Tage
       - entity: sensor.kreis_steinfurt_einsatzhistorie
         name: Gespeicherte Einsätze
@@ -19,7 +19,7 @@ cards:
   - type: markdown
     title: Aktive Alarme
     content: |
-      {% set einsaetze = state_attr('sensor.kreis_steinfurt_laufende_einsaetze', 'einsaetze') or [] %}
+      {% set einsaetze = state_attr('sensor.kreis_steinfurt_laufende_einsatze', 'einsaetze') or [] %}
       {% if einsaetze | count > 0 %}
       | Beginn | Ort | Einsatzart | Zustand |
       | :--- | :--- | :--- | :--- |

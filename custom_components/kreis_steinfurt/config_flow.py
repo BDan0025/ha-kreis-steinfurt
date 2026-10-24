@@ -10,6 +10,10 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     CONF_AREAS,
+    CONF_ENABLE_CITY_LAST_INCIDENT,
+    CONF_ENABLE_CITY_SUMMARIES,
+    CONF_ENABLE_INCIDENT_ENTITIES,
+    CONF_INCLUDE_LIST_ATTRIBUTES,
     CONF_KARTENPOSITION,
     CONF_RETENTION,
     CONF_SCAN_INTERVAL,
@@ -104,6 +108,22 @@ class KreisSteinfurtOptionsFlow(config_entries.OptionsFlow):
                         translation_key="areas",
                     )
                 ),
+                vol.Required(
+                    CONF_ENABLE_INCIDENT_ENTITIES,
+                    default=options.get(CONF_ENABLE_INCIDENT_ENTITIES, True),
+                ): bool,
+                vol.Required(
+                    CONF_ENABLE_CITY_SUMMARIES,
+                    default=options.get(CONF_ENABLE_CITY_SUMMARIES, True),
+                ): bool,
+                vol.Required(
+                    CONF_ENABLE_CITY_LAST_INCIDENT,
+                    default=options.get(CONF_ENABLE_CITY_LAST_INCIDENT, True),
+                ): bool,
+                vol.Required(
+                    CONF_INCLUDE_LIST_ATTRIBUTES,
+                    default=options.get(CONF_INCLUDE_LIST_ATTRIBUTES, True),
+                ): bool,
             }
         )
 

@@ -123,6 +123,12 @@ def _format_duration(seconds: int) -> str:
     return f"{hours} Std. {minutes} Min."
 
 
+def _format_short_duration(seconds: int) -> str:
+    """Format a duration as zero-padded hours and minutes."""
+    hours, remainder = divmod(seconds, 3600)
+    return f"{hours:02d}:{remainder // 60:02d}"
+
+
 def _einsaetze_in_zeitraum(einsaetze: list[Einsatz], days: int) -> list[Einsatz]:
     """Return incidents today or within the previous number of days."""
     now = dt_util.now().replace(tzinfo=None)
@@ -140,12 +146,15 @@ async def async_setup_entry(
     """Set up summary, city and individual-incident sensors."""
     coordinator: KreisSteinfurtCoordinator = hass.data[DOMAIN][entry.entry_id]
     known_incidents: set[str] = set()
-    known_cities: set[str] = set()
     incident_entities: dict[str, KreisSteinfurtEinsatzSensor] = {}
     letzter_einsatz_sensor = KreisSteinfurtLetzterEinsatzSensor(
         coordinator,
         entry.entry_id,
     )
+    city_last_incident_entities = [
+        KreisSteinfurtCityLastIncidentSensor(coordinator, entry.entry_id, city)
+        for city in sorted(coordinator.monitored_areas)
+    ]
 
     def _is_monitored(einsatz: Einsatz) -> bool:
         """Return whether an incident matches the configured options."""
@@ -164,7 +173,10 @@ async def async_setup_entry(
         new_entities: list[SensorEntity] = []
 
         for einsatz in einsaetze:
-            if einsatz.einsatznr not in known_incidents:
+            if (
+                coordinator.incident_entities_enabled
+                and einsatz.einsatznr not in known_incidents
+            ):
                 known_incidents.add(einsatz.einsatznr)
                 incident_entity = KreisSteinfurtEinsatzSensor(
                     coordinator,
@@ -173,11 +185,6 @@ async def async_setup_entry(
                 )
                 incident_entities[einsatz.einsatznr] = incident_entity
                 new_entities.append(incident_entity)
-
-            city_id = slugify(einsatz.ort)
-            if city_id not in known_cities:
-                known_cities.add(city_id)
-                new_entities.append(KreisSteinfurtCitySensor(coordinator, entry.entry_id, einsatz.ort))
 
         return new_entities
 
@@ -195,18 +202,18 @@ async def async_setup_entry(
     def _cleanup_registry() -> None:
         """Remove retained incident entities no longer eligible after a restart."""
         entity_registry = er.async_get(hass)
-        retained = [
-            einsatz
-            for einsatz in coordinator.retained_einsaetze
-            if _is_monitored(einsatz)
-        ]
         incident_unique_ids = {
             f"{DOMAIN}_einsatz_{slugify(einsatz.einsatznr)}_{entry.entry_id}"
-            for einsatz in retained
+            for einsatz in coordinator.retained_einsaetze
+            if _is_monitored(einsatz)
         }
         city_unique_ids = {
             f"{DOMAIN}_einsatzort_{slugify(einsatz.ort)}_{entry.entry_id}"
-            for einsatz in retained
+            for einsatz in coordinator.monitored_areas
+        }
+        city_last_incident_unique_ids = {
+            f"{DOMAIN}_letzter_einsatzort_{slugify(city)}_{entry.entry_id}"
+            for city in coordinator.monitored_areas
         }
 
         for registry_entry in er.async_entries_for_config_entry(
@@ -214,10 +221,22 @@ async def async_setup_entry(
             entry.entry_id,
         ):
             if registry_entry.unique_id.startswith(f"{DOMAIN}_einsatz_"):
-                if registry_entry.unique_id not in incident_unique_ids:
+                if (
+                    not coordinator.incident_entities_enabled
+                    or registry_entry.unique_id not in incident_unique_ids
+                ):
                     entity_registry.async_remove(registry_entry.entity_id)
             elif registry_entry.unique_id.startswith(f"{DOMAIN}_einsatzort_"):
-                if registry_entry.unique_id not in city_unique_ids:
+                if (
+                    not coordinator.city_summaries_enabled
+                    or registry_entry.unique_id not in city_unique_ids
+                ):
+                    entity_registry.async_remove(registry_entry.entity_id)
+            elif registry_entry.unique_id.startswith(f"{DOMAIN}_letzter_einsatzort_"):
+                if (
+                    not coordinator.city_last_incident_enabled
+                    or registry_entry.unique_id not in city_last_incident_unique_ids
+                ):
                     entity_registry.async_remove(registry_entry.entity_id)
 
     _cleanup_registry()
@@ -233,6 +252,19 @@ async def async_setup_entry(
             KreisSteinfurtEinsaetzeLetzte7TageSensor(coordinator, entry.entry_id),
             KreisSteinfurtEinsatzartenSensor(coordinator, entry.entry_id),
             KreisSteinfurtAbrufintervallSensor(coordinator, entry.entry_id),
+            *(
+                [
+                    KreisSteinfurtCitySensor(coordinator, entry.entry_id, city)
+                    for city in sorted(coordinator.monitored_areas)
+                ]
+                if coordinator.city_summaries_enabled
+                else []
+            ),
+            *(
+                city_last_incident_entities
+                if coordinator.city_last_incident_enabled
+                else []
+            ),
             *_new_dynamic_entities(),
         ]
     )
@@ -251,6 +283,10 @@ async def async_setup_entry(
         for entity in incident_entities.values():
             if entity.has_completion_time:
                 entity.async_write_ha_state()
+        if coordinator.city_last_incident_enabled:
+            for entity in city_last_incident_entities:
+                if entity.has_completion_time:
+                    entity.async_write_ha_state()
 
     entry.async_on_unload(
         async_track_time_interval(
@@ -315,13 +351,15 @@ class KreisSteinfurtEinsaetzeSensor(_KreisSteinfurtCoordinatorSensor):
     @property
     def extra_state_attributes(self) -> dict[str, object]:
         """Return incident details for cards and automations."""
-        return {
+        attributes: dict[str, object] = {
             "einsatzanzahl_letzte_48_stunden": len(self._einsaetze),
             "laufende_einsaetze": len(_laufende_einsaetze(self._einsaetze)),
             "einsatznummern": [einsatz.einsatznr for einsatz in self._einsaetze],
             "orte": sorted({einsatz.ort for einsatz in self._einsaetze}),
-            "einsaetze": _compact_list(self._einsaetze),
         }
+        if self.coordinator.list_attributes_enabled:
+            attributes["einsaetze"] = _compact_list(self._einsaetze)
+        return attributes
 
 
 class KreisSteinfurtLetzterEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
@@ -372,7 +410,7 @@ class KreisSteinfurtLaufendeEinsaetzeSensor(_KreisSteinfurtCoordinatorSensor):
     """Count incidents that are not marked as completed."""
 
     _attr_name = "Kreis Steinfurt laufende Einsätze"
-    _attr_suggested_object_id = "kreis_steinfurt_laufende_einsaetze"
+    _attr_suggested_object_id = "kreis_steinfurt_laufende_einsatze"
 
     def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
         """Initialize the running-incident sensor."""
@@ -388,14 +426,16 @@ class KreisSteinfurtLaufendeEinsaetzeSensor(_KreisSteinfurtCoordinatorSensor):
     def extra_state_attributes(self) -> dict[str, object]:
         """Return the currently running incidents."""
         laufende = _laufende_einsaetze(self._einsaetze)
-        return {"einsaetze": _compact_list(laufende)}
+        if self.coordinator.list_attributes_enabled:
+            return {"einsaetze": _compact_list(laufende)}
+        return {}
 
 
 class KreisSteinfurtLetzte24StundenSensor(_KreisSteinfurtCoordinatorSensor):
     """Count incidents whose start time is within the last 24 hours."""
 
     _attr_name = "Kreis Steinfurt Einsätze letzte 24 Stunden"
-    _attr_suggested_object_id = "kreis_steinfurt_einsaetze_letzte_24_stunden"
+    _attr_suggested_object_id = "kreis_steinfurt_einsatze_letzte_24_stunden"
 
     def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
         """Initialize the 24-hour sensor."""
@@ -416,7 +456,9 @@ class KreisSteinfurtLetzte24StundenSensor(_KreisSteinfurtCoordinatorSensor):
     @property
     def extra_state_attributes(self) -> dict[str, object]:
         """Return the incidents in the selected time period."""
-        return {"einsaetze": _compact_list(self._letzte_24_stunden)}
+        if self.coordinator.list_attributes_enabled:
+            return {"einsaetze": _compact_list(self._letzte_24_stunden)}
+        return {}
 
 
 class KreisSteinfurtHistorieSensor(_KreisSteinfurtCoordinatorSensor):
@@ -438,12 +480,14 @@ class KreisSteinfurtHistorieSensor(_KreisSteinfurtCoordinatorSensor):
     @property
     def extra_state_attributes(self) -> dict[str, object]:
         """Return retained incidents with their lifecycle details."""
-        return {
+        attributes: dict[str, object] = {
             "aufbewahrung": self.coordinator.retention,
             "einsatzarten": self.coordinator.known_incident_types,
             "einsatzanzahl": len(self._historie),
-            "einsaetze": _compact_list(self._historie),
         }
+        if self.coordinator.list_attributes_enabled:
+            attributes["einsaetze"] = _compact_list(self._historie)
+        return attributes
 
 
 class _KreisSteinfurtZeitraumSensor(_KreisSteinfurtCoordinatorSensor):
@@ -486,7 +530,7 @@ class KreisSteinfurtEinsaetzeHeuteSensor(_KreisSteinfurtZeitraumSensor):
     """Count retained incidents that started today (last 24 hours)."""
 
     _attr_name = "Kreis Steinfurt Einsätze heute"
-    _attr_suggested_object_id = "kreis_steinfurt_einsaetze_heute"
+    _attr_suggested_object_id = "kreis_steinfurt_einsatze_heute"
     _days = 1
 
     def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
@@ -499,7 +543,7 @@ class KreisSteinfurtEinsaetzeLetzte7TageSensor(_KreisSteinfurtZeitraumSensor):
     """Count retained incidents from the last seven days."""
 
     _attr_name = "Kreis Steinfurt Einsätze letzte 7 Tage"
-    _attr_suggested_object_id = "kreis_steinfurt_einsaetze_letzte_7_tage"
+    _attr_suggested_object_id = "kreis_steinfurt_einsatze_letzte_7_tage"
     _days = 7
 
     def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
@@ -570,7 +614,7 @@ class KreisSteinfurtCitySensor(_KreisSteinfurtCoordinatorSensor):
         self._city = city
         city_id = slugify(city)
         self._attr_name = f"Kreis Steinfurt Einsätze {city}"
-        self._attr_suggested_object_id = f"kreis_steinfurt_einsaetze_{city_id}"
+        self._attr_suggested_object_id = f"kreis_steinfurt_einsatze_{city_id}"
         self._attr_unique_id = f"{DOMAIN}_einsatzort_{city_id}_{entry_id}"
 
     @property
@@ -593,14 +637,66 @@ class KreisSteinfurtCitySensor(_KreisSteinfurtCoordinatorSensor):
         """Return the city's incidents and running count."""
         einsaetze = self._city_einsaetze
         historie = self._city_historie
-        return {
+        attributes: dict[str, object] = {
             "ort": self._city,
             "laufende_einsaetze": len(_laufende_einsaetze(einsaetze)),
             "einsatzanzahl_heute": len(_einsaetze_in_zeitraum(historie, 1)),
             "einsatzanzahl_letzte_7_tage": len(_einsaetze_in_zeitraum(historie, 7)),
-            "einsaetze": _compact_list(einsaetze),
-            "historie": _compact_list(historie, _MAX_CITY_HISTORY_ITEMS),
         }
+        if self.coordinator.list_attributes_enabled:
+            attributes["einsaetze"] = _compact_list(einsaetze)
+            attributes["historie"] = _compact_list(historie, _MAX_CITY_HISTORY_ITEMS)
+        return attributes
+
+
+class KreisSteinfurtCityLastIncidentSensor(_KreisSteinfurtCoordinatorSensor):
+    """Expose the latest retained incident for one selected city."""
+
+    def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str, city: str) -> None:
+        """Initialize a stable latest-incident sensor for one city."""
+        super().__init__(coordinator)
+        self._city = city
+        city_id = slugify(city)
+        self._attr_name = f"Kreis Steinfurt letzter Einsatz {city}"
+        self._attr_suggested_object_id = f"kreis_steinfurt_letzter_einsatz_{city_id}"
+        self._attr_unique_id = f"{DOMAIN}_letzter_einsatzort_{city_id}_{entry_id}"
+
+    @property
+    def _letzter_einsatz(self) -> Einsatz | None:
+        """Return the newest retained incident for this city."""
+        return max(
+            (einsatz for einsatz in self._historie if einsatz.ort == self._city),
+            key=lambda einsatz: einsatz.beginn,
+            default=None,
+        )
+
+    @property
+    def has_completion_time(self) -> bool:
+        """Return whether the completion-age timer applies."""
+        return (
+            (einsatz := self._letzter_einsatz) is not None
+            and einsatz.abgeschlossen_am is not None
+        )
+
+    @property
+    def native_value(self) -> str | None:
+        """Return age since completion, or the running duration, as HH:MM."""
+        if (einsatz := self._letzter_einsatz) is None:
+            return None
+        if (completion_age := _completion_age_seconds(einsatz)) is not None:
+            return _format_short_duration(completion_age)
+        return _format_short_duration(_duration_seconds(einsatz))
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        """Return details for the city's latest retained incident."""
+        if (einsatz := self._letzter_einsatz) is None:
+            return {"ort": self._city, "status": "kein Einsatz gespeichert"}
+        attributes = _einsatz_attributes(einsatz, self.coordinator.kartenposition)
+        attributes["zeitangabe"] = (
+            "seit Abschluss" if einsatz.abgeschlossen_am is not None else "Laufzeit"
+        )
+        return attributes
 
 
 class KreisSteinfurtEinsatzSensor(_KreisSteinfurtCoordinatorSensor):

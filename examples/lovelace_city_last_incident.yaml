@@ -2,19 +2,16 @@
 type: markdown
 title: Ibbenbüren – letzter Einsatz
 content: |-
-  {% set historie = state_attr('sensor.kreis_steinfurt_einsatze_ibbenburen', 'historie') or [] %}
-  {% set letzter = historie | sort(attribute='beginn', reverse=true) | first %}
-  {% if letzter %}
-  **Einsatznummer:** {{ letzter.einsatznummer | default('–') }}<br>
-  **Einsatzart:** {{ letzter.einsatzart | default(letzter.sachverhalt | default('–')) }}<br>
-  **Beginn:** {{ letzter.beginn | default(letzter.zeit | default('–')) }}<br>
-  **Zustand:** {{ letzter.status | default(letzter.zustand | default('–')) }}<br>
-  {% if letzter.abgeschlossen_am %}
-  **Abgeschlossen am:** {{ as_local(as_datetime(letzter.abgeschlossen_am)).strftime('%d.%m.%Y %H:%M') }}<br>
-  **Einsatzdauer:** {{ letzter.dauer | default('–') }}
-  {% else %}
-  **Laufzeit bis jetzt:** {{ letzter.dauer | default('wird ermittelt') }}
-  {% endif %}
+  {% set entity = 'sensor.kreis_steinfurt_letzter_einsatz_ibbenburen' %}
+  {% if states(entity) not in ['unknown', 'unavailable'] %}
+  **Vor / Laufzeit:** {{ states(entity) }}<br>
+  **Einsatznummer:** {{ state_attr(entity, 'einsatznummer') | default('–') }}<br>
+  **Einsatzart:** {{ state_attr(entity, 'einsatzart') | default('–') }}<br>
+  **Beginn:** {{ state_attr(entity, 'beginn') | default('–') }}<br>
+  **Zustand:** {{ state_attr(entity, 'status') | default('–') }}<br>
+  {% if state_attr(entity, 'abgeschlossen_am') %}
+  **Abgeschlossen am:** {{ as_local(as_datetime(state_attr(entity, 'abgeschlossen_am'))).strftime('%d.%m.%Y %H:%M') }}<br>
+  **Einsatzdauer:** {{ state_attr(entity, 'dauer') | default('–') }}
   {% else %}
   Für Ibbenbüren ist noch kein Einsatz gespeichert.
   {% endif %}

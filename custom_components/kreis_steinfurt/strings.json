@@ -10,12 +10,16 @@
     "step": {
       "init": {
         "title": "Überwachung einstellen",
-        "description": "Lege Abrufintervall, überwachte Kommunen und die Aufbewahrungsdauer einzelner Einsatz-Entities fest. Kartenposition: Die Quelle liefert aktuell keine Koordinaten. Mit Stadtmittelpunkt wird daher nur eine grobe Ortsposition angezeigt.",
+        "description": "Lege Abrufintervall, überwachte Kommunen und die Aufbewahrungsdauer einzelner Einsatz-Entities fest. Unter Zusatz-Entities & Datenumfang kannst du nicht benötigte Entities und Listen abschalten. Kartenposition: Die Quelle liefert aktuell keine Koordinaten. Mit Stadtmittelpunkt wird daher nur eine grobe Ortsposition angezeigt.",
         "data": {
           "scan_interval": "Abrufintervall in Sekunden (60 bis 3600)",
           "retention": "Einsatz-Entities löschen nach",
           "kartenposition": "Kartenposition für Einsätze",
-          "areas": "Überwachte Kommunen"
+          "areas": "Überwachte Kommunen",
+          "enable_incident_entities": "Einzelne Einsatz-Entities erstellen",
+          "enable_city_summaries": "Ortsübersichten erstellen",
+          "enable_city_last_incident": "Letzten Einsatz je Ort erstellen",
+          "include_list_attributes": "Einsatzlisten in Attributen bereitstellen"
         }
       }
     }

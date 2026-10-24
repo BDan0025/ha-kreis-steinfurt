@@ -21,22 +21,28 @@ Die Integration erstellt diese Übersichten:
 
 - `sensor.kreis_steinfurt_einsaetze` – Anzahl aller veröffentlichten Einsätze
   der letzten 48 Stunden
-- `sensor.kreis_steinfurt_laufende_einsaetze` – Anzahl der Einträge, die nicht
+- `sensor.kreis_steinfurt_laufende_einsatze` – Anzahl der Einträge, die nicht
   als `abgeschlossen` markiert sind
-- `sensor.kreis_steinfurt_einsaetze_letzte_24_stunden` – Anzahl seit den
+- `sensor.kreis_steinfurt_einsatze_letzte_24_stunden` – Anzahl seit den
   vergangenen 24 Stunden
 - `sensor.kreis_steinfurt_einsatzhistorie` – Anzahl der gespeicherten Einsätze
   innerhalb der gewählten Aufbewahrungsdauer
-- `sensor.kreis_steinfurt_einsaetze_heute` – Gesamtzahl seit Tagesbeginn
-- `sensor.kreis_steinfurt_einsaetze_letzte_7_tage` – Gesamtzahl der letzten
+- `sensor.kreis_steinfurt_einsatze_heute` – Gesamtzahl seit Tagesbeginn
+- `sensor.kreis_steinfurt_einsatze_letzte_7_tage` – Gesamtzahl der letzten
   sieben Tage
 - `sensor.kreis_steinfurt_einsatzarten` – bekannte Einsatzarten mit Zählern in
   den Attributen
 - `sensor.kreis_steinfurt_letzter_einsatz` – vollständige Details des jeweils
   zuletzt veröffentlichten Einsatzes
 
-Zusätzlich entstehen dynamisch Sensoren für jeden Einsatz sowie jede in der
-Liste vorkommende Stadt. Ein Einsatzsensor hat den Status als Zustand und die
+Zusätzlich entstehen – sofern in den Einstellungen aktiviert – dynamisch
+Sensoren für jeden Einsatz sowie feste Übersichten für jede ausgewählte Stadt.
+Für jede überwachte Stadt erstellt die Integration außerdem eine Entität wie
+`sensor.kreis_steinfurt_letzter_einsatz_ibbenburen`. Ihr Zustand ist die Zeit
+seit Abschluss im Format `HH:MM` (bei einem laufenden Einsatz dessen bisherige
+Laufzeit); die Detailattribute enthalten Einsatznummer, Art, Beginn, Abschluss,
+Dauer und Status. Ohne gespeicherten Einsatz hat die Entität den Zustand
+`unbekannt`. Ein Einsatzsensor hat den Status als Zustand und die
 Attribute `einsatznummer`, `einsatzart`, `ort`, `beginn`, `status`, `strasse`,
   `sachverhalt`, `latitude`, `longitude` und `kartenposition`. Straße und
 Sachverhalt sind `null`, solange die öffentliche Quelle diese Angaben nicht
@@ -92,6 +98,14 @@ Konfigurieren** lassen sich das Abrufintervall (60 bis 3600 Sekunden) sowie die
 überwachten Kommunen per Mehrfachauswahl festlegen.
 Die Übersichtssensoren sowie Einsatz- und Ortssensoren berücksichtigen nur diese
 Auswahl.
+
+Unter **Zusatz-Entities & Datenumfang** lassen sich vier optionale Bestandteile
+einzeln abschalten: einzelne Einsatz-Entities, Ortsübersichten, „letzter Einsatz“
+je Ort sowie die kompakten Einsatzlisten in den Attributen. Die Schalter sind
+standardmäßig aktiviert und erhalten damit das bisherige Verhalten. Werden
+Listen abgeschaltet, bleiben Zähler und Detailattribute verfügbar, aber Karten,
+die `einsatze` oder `historie` aus Attributen lesen, benötigen diese Listen nicht
+mehr bzw. zeigen keine Einträge an.
 
 `sensor.kreis_steinfurt_abrufintervall` zeigt den aktuell verwendeten Wert in
 Sekunden an.
