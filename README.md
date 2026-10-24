@@ -2,7 +2,7 @@
 
 Home-Assistant-Integration für die öffentlich veröffentlichte Liste der [aktuellen Einsätze des Kreises Steinfurt](https://www.kreis-steinfurt.de/kv_steinfurt/Kreisverwaltung/%C3%84mter/Amt%20f%C3%BCr%20Bev%C3%B6lkerungsschutz/Kreisleitstelle/Aktuelle%20Eins%C3%A4tze/).
 
-> **Aktuelle Version: 0.6.0** · Die Daten stammen ausschließlich aus der öffentlichen Quelle und können unvollständig, verspätet oder fehlerhaft sein.
+> **Aktuelle Version: 0.6.1** · Die Daten stammen ausschließlich aus der öffentlichen Quelle und können unvollständig, verspätet oder fehlerhaft sein.
 
 ## Das bietet die Integration
 

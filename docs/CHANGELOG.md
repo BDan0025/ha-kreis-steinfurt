@@ -1,5 +1,9 @@
 # Änderungsübersicht
 
+## 0.6.1
+
+- Fehler beim Erstellen der Kartenpunkte 1 bis 10 behoben. Die Punkte liefern nun korrekt Einsatzart, Details und Kartenposition.
+
 ## 0.6.0
 
 - Neue Dashboard-Karte „Letzte 10 Einsätze“ mit laufenden und abgeschlossenen Einsätzen.

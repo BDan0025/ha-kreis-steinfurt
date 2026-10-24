@@ -730,6 +730,7 @@ class KreisSteinfurtLastIncidentMapSensor(_KreisSteinfurtCoordinatorSensor):
             f"{DOMAIN}_kartenpunkt_letzter_einsatz_{position}_{entry_id}"
         )
 
+    @property
     def _einsatz(self) -> Einsatz | None:
         """Return the incident assigned to this marker slot."""
         einsaetze = sorted(
