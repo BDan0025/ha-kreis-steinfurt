@@ -1,5 +1,12 @@
 # Änderungsübersicht
 
+## 0.6.0
+
+- Neue Dashboard-Karte „Letzte 10 Einsätze“ mit laufenden und abgeschlossenen Einsätzen.
+- Neue geografische Karte für die zehn neuesten Einsätze. Ihre Markierungen werden automatisch bei jedem neuen Einsatz aktualisiert.
+- Ortskarte „letzter Einsatz“ im Dashboard und als Git-Vorlage auf die feste Orts-Entität umgestellt.
+- Laufende Einsätze werden in der Ortskarte korrekt mit ihrer bisherigen Laufzeit dargestellt.
+
 ## 0.5.1
 
 - Einstellungsseite vollständig und verständlich auf Deutsch beschriftet.

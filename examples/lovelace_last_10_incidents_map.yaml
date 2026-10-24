@@ -1,0 +1,17 @@
+# Einzelkarte: Automatisch die zehn neuesten gespeicherten Einsätze auf einer Karte.
+# Die Kartenposition richtet sich nach der Integrationseinstellung. Bei
+# "Stadtmittelpunkt" wird der Mittelpunkt des Einsatzorts verwendet.
+type: map
+title: Letzte 10 Einsätze – Karte
+auto_fit: true
+entities:
+  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_1
+  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_2
+  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_3
+  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_4
+  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_5
+  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_6
+  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_7
+  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_8
+  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_9
+  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_10

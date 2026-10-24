@@ -13,5 +13,8 @@ content: |-
   **Abgeschlossen am:** {{ as_local(as_datetime(state_attr(entity, 'abgeschlossen_am'))).strftime('%d.%m.%Y %H:%M') }}<br>
   **Einsatzdauer:** {{ state_attr(entity, 'dauer') | default('–') }}
   {% else %}
+  **Laufzeit bis jetzt:** {{ state_attr(entity, 'dauer') | default('–') }}
+  {% endif %}
+  {% else %}
   Für Ibbenbüren ist noch kein Einsatz gespeichert.
   {% endif %}

@@ -35,6 +35,8 @@ Die folgenden Beispiele verwenden Ibbenbüren. Ersetze sowohl Titel als auch Ent
 | Vorlage | Zweck |
 | --- | --- |
 | [`lovelace_active_alarms.yaml`](../examples/lovelace_active_alarms.yaml) | nur laufende Alarme |
+| [`lovelace_last_10_incidents.yaml`](../examples/lovelace_last_10_incidents.yaml) | die zehn neuesten Einsätze, einschließlich laufender und abgeschlossener Einsätze |
+| [`lovelace_last_10_incidents_map.yaml`](../examples/lovelace_last_10_incidents_map.yaml) | die zehn neuesten Einsätze als geografische Karte |
 | [`lovelace_history.yaml`](../examples/lovelace_history.yaml) | Historie im gesamten Gebiet |
 | [`lovelace_incident_lists.yaml`](../examples/lovelace_incident_lists.yaml) | kombinierte Listenansichten |
 | [`lovelace_cards.yaml`](../examples/lovelace_cards.yaml) | bisheriges Gesamtbeispiel |

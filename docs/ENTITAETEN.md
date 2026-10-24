@@ -19,6 +19,12 @@
 
 `dauer` bedeutet bei einem abgeschlossenen Einsatz die Zeit von Beginn bis Abschluss. Bei einem laufenden Einsatz ist es die Laufzeit bis jetzt. `abgeschlossen_vor` wird im Zehn-Minuten-Takt aktualisiert, ohne einen neuen Abruf der Quelle auszulösen.
 
+## Kartenpunkte der letzten zehn Einsätze
+
+Die zehn festen Entitäten `sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_1` bis `sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_10` bilden immer die zehn neuesten gespeicherten Einsätze ab. Sie sind für die Lovelace-Kartenansicht gedacht und werden bei neuen Einsätzen automatisch neu belegt.
+
+Jeder Kartenpunkt enthält die gleichen Details wie ein einzelner Einsatz, insbesondere `ort`, `einsatzart`, `beginn`, `status`, `latitude`, `longitude` und `kartenposition`. Ohne hinterlegte Position bleibt der betreffende Punkt in der Karte unsichtbar.
+
 ## Ortsübersichten
 
 Für jeden ausgewählten Ort entsteht eine feste Entität. Beispiele:

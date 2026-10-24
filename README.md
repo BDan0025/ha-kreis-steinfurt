@@ -2,7 +2,7 @@
 
 Home-Assistant-Integration für die öffentlich veröffentlichte Liste der [aktuellen Einsätze des Kreises Steinfurt](https://www.kreis-steinfurt.de/kv_steinfurt/Kreisverwaltung/%C3%84mter/Amt%20f%C3%BCr%20Bev%C3%B6lkerungsschutz/Kreisleitstelle/Aktuelle%20Eins%C3%A4tze/).
 
-> **Aktuelle Version: 0.5.1** · Die Daten stammen ausschließlich aus der öffentlichen Quelle und können unvollständig, verspätet oder fehlerhaft sein.
+> **Aktuelle Version: 0.6.0** · Die Daten stammen ausschließlich aus der öffentlichen Quelle und können unvollständig, verspätet oder fehlerhaft sein.
 
 ## Das bietet die Integration
 
@@ -57,6 +57,8 @@ Alle Vorlagen liegen im Ordner [`examples`](examples/) und sind unabhängig vone
 - [Letzter Einsatz einer Stadt](examples/lovelace_city_last_incident.yaml)
 - [Ortsübersicht](examples/lovelace_city_overview.yaml)
 - [Aktive Alarme](examples/lovelace_active_alarms.yaml)
+- [Letzte 10 Einsätze](examples/lovelace_last_10_incidents.yaml)
+- [Letzte 10 Einsätze – Karte](examples/lovelace_last_10_incidents_map.yaml)
 - [Einsatzhistorie](examples/lovelace_history.yaml)
 
 Die vollständige Liste samt Voraussetzungen und Anpassung auf einen anderen Ort steht in der [Dashboard-Dokumentation](docs/DASHBOARD.md).

@@ -20,6 +20,7 @@ from .models import Einsatz
 
 _MAX_LIST_ITEMS = 50
 _MAX_CITY_HISTORY_ITEMS = 25
+_LAST_INCIDENT_MAP_ITEMS = 10
 _COMPLETION_AGE_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
@@ -155,6 +156,10 @@ async def async_setup_entry(
         KreisSteinfurtCityLastIncidentSensor(coordinator, entry.entry_id, city)
         for city in sorted(coordinator.monitored_areas)
     ]
+    last_incident_map_entities = [
+        KreisSteinfurtLastIncidentMapSensor(coordinator, entry.entry_id, position)
+        for position in range(1, _LAST_INCIDENT_MAP_ITEMS + 1)
+    ]
 
     def _is_monitored(einsatz: Einsatz) -> bool:
         """Return whether an incident matches the configured options."""
@@ -252,6 +257,7 @@ async def async_setup_entry(
             KreisSteinfurtEinsaetzeLetzte7TageSensor(coordinator, entry.entry_id),
             KreisSteinfurtEinsatzartenSensor(coordinator, entry.entry_id),
             KreisSteinfurtAbrufintervallSensor(coordinator, entry.entry_id),
+            *last_incident_map_entities,
             *(
                 [
                     KreisSteinfurtCitySensor(coordinator, entry.entry_id, city)
@@ -287,6 +293,9 @@ async def async_setup_entry(
             for entity in city_last_incident_entities:
                 if entity.has_completion_time:
                     entity.async_write_ha_state()
+        for entity in last_incident_map_entities:
+            if entity.has_completion_time:
+                entity.async_write_ha_state()
 
     entry.async_on_unload(
         async_track_time_interval(
@@ -697,6 +706,67 @@ class KreisSteinfurtCityLastIncidentSensor(_KreisSteinfurtCoordinatorSensor):
             "seit Abschluss" if einsatz.abgeschlossen_am is not None else "Laufzeit"
         )
         return attributes
+
+
+class KreisSteinfurtLastIncidentMapSensor(_KreisSteinfurtCoordinatorSensor):
+    """Expose one of the ten newest retained incidents as a map marker."""
+
+    _attr_icon = "mdi:map-marker"
+
+    def __init__(
+        self,
+        coordinator: KreisSteinfurtCoordinator,
+        entry_id: str,
+        position: int,
+    ) -> None:
+        """Initialize a stable marker slot for the latest-incidents map."""
+        super().__init__(coordinator)
+        self._position = position
+        self._attr_name = f"Kreis Steinfurt Kartenpunkt {position}"
+        self._attr_suggested_object_id = (
+            f"kreis_steinfurt_kartenpunkt_letzter_einsatz_{position}"
+        )
+        self._attr_unique_id = (
+            f"{DOMAIN}_kartenpunkt_letzter_einsatz_{position}_{entry_id}"
+        )
+
+    def _einsatz(self) -> Einsatz | None:
+        """Return the incident assigned to this marker slot."""
+        einsaetze = sorted(
+            self._historie,
+            key=lambda einsatz: einsatz.beginn,
+            reverse=True,
+        )
+        if len(einsaetze) < self._position:
+            return None
+        return einsaetze[self._position - 1]
+
+    @property
+    def available(self) -> bool:
+        """Only expose markers for slots that contain an incident."""
+        return super().available and self._einsatz is not None
+
+    @property
+    def has_completion_time(self) -> bool:
+        """Return whether the displayed incident is completed."""
+        return (
+            (einsatz := self._einsatz) is not None
+            and einsatz.abgeschlossen_am is not None
+        )
+
+    @property
+    def native_value(self) -> str | None:
+        """Return a concise map marker state."""
+        if (einsatz := self._einsatz) is None:
+            return None
+        return einsatz.einsatzart
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        """Return complete incident details including the map position."""
+        if (einsatz := self._einsatz) is None:
+            return {}
+        return _einsatz_attributes(einsatz, self.coordinator.kartenposition)
 
 
 class KreisSteinfurtEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
