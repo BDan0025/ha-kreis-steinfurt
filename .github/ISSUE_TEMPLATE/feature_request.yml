@@ -1,0 +1,18 @@
+name: Funktionswunsch
+description: Eine Idee für Kreis Steinfurt Einsätze vorschlagen.
+title: "[Wunsch]: "
+labels: ["Erweiterung"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Welches Problem soll gelöst werden?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Dein Vorschlag
+      description: Beschreibe die gewünschte Funktion oder Entität.
+    validations:
+      required: true

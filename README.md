@@ -1,8 +1,11 @@
 # Kreis Steinfurt Einsätze
 
+[![HACS-Validierung](https://github.com/BDan0025/ha-kreis-steinfurt/actions/workflows/validate.yaml/badge.svg)](https://github.com/BDan0025/ha-kreis-steinfurt/actions/workflows/validate.yaml)
+[![Hassfest](https://github.com/BDan0025/ha-kreis-steinfurt/actions/workflows/hassfest.yaml/badge.svg)](https://github.com/BDan0025/ha-kreis-steinfurt/actions/workflows/hassfest.yaml)
+
 Home-Assistant-Integration für die öffentlich veröffentlichte Liste der [aktuellen Einsätze des Kreises Steinfurt](https://www.kreis-steinfurt.de/kv_steinfurt/Kreisverwaltung/%C3%84mter/Amt%20f%C3%BCr%20Bev%C3%B6lkerungsschutz/Kreisleitstelle/Aktuelle%20Eins%C3%A4tze/).
 
-> **Aktuelle Version: 0.7.0** · Die Daten stammen ausschließlich aus der öffentlichen Quelle und können unvollständig, verspätet oder fehlerhaft sein.
+> **Aktuelle Version: 1.0.0** · Die Daten stammen ausschließlich aus der öffentlichen Quelle und können unvollständig, verspätet oder fehlerhaft sein.
 
 ## Das bietet die Integration
 
@@ -15,7 +18,16 @@ Home-Assistant-Integration für die öffentlich veröffentlichte Liste der [aktu
 | Dashboard | einzeln nutzbare Lovelace-Karten für Übersicht, Orte, Historie und Details |
 | Datenumfang | begrenzte Listenattribute und abschaltbare Zusatz-Entities |
 
-## Schnellstart
+## Installation
+
+### Über HACS als eigenes Repository
+
+1. In HACS **Integrationen** öffnen und oben rechts **Benutzerdefinierte Repositorys** wählen.
+2. `https://github.com/BDan0025/ha-kreis-steinfurt` einfügen und als Kategorie **Integration** wählen.
+3. Die Integration installieren und Home Assistant neu starten.
+4. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen** nach **Kreis Steinfurt Einsätze** suchen.
+
+### Manuelle Installation
 
 1. Den Ordner `custom_components/kreis_steinfurt` nach `<Home-Assistant-Konfiguration>/custom_components/kreis_steinfurt` kopieren.
 2. Home Assistant neu starten.
@@ -31,6 +43,7 @@ Home-Assistant-Integration für die öffentlich veröffentlichte Liste der [aktu
 | [Einstellungen](docs/EINSTELLUNGEN.md) | Abrufintervall, Aufbewahrung, Orte, Kartenposition und Schalter |
 | [Dashboard-Beispiele](docs/DASHBOARD.md) | Jede Lovelace-Karte einzeln erklärt |
 | [Bilder & Screenshots](docs/images/README.md) | Bereich für Screenshots der Dashboard-Beispiele |
+| [HACS-Veröffentlichung](docs/HACS.md) | Checkliste für GitHub-Release und offizielle HACS-Aufnahme |
 | [Änderungen](docs/CHANGELOG.md) | Funktionsstände und Versionsverlauf |
 
 ## Wichtige Entitäten
@@ -68,6 +81,16 @@ Die vollständige Liste samt Voraussetzungen und Anpassung auf einen anderen Ort
 Die Quelle veröffentlicht Einsätze der letzten rund 48 Stunden. Straße, Sachverhalt und genaue Koordinaten sind nicht immer verfügbar. Als optionale Kartenposition kann deshalb ein Stadtmittelpunkt verwendet werden; das ist nur eine grobe Ortsangabe, niemals eine Einsatzadresse.
 
 Die Detail- und Listenattribute sind bewusst begrenzt, damit die Home-Assistant-Datenbank klein bleibt. Mehr dazu steht bei den [Einstellungen](docs/EINSTELLUNGEN.md).
+
+## Unterstützung und Fehler melden
+
+- Fehler oder fehlende Orte bitte als [GitHub-Issue](https://github.com/BDan0025/ha-kreis-steinfurt/issues/new/choose) melden.
+- Bitte immer die Integrationsversion, die Home-Assistant-Version und den passenden Protokolleintrag angeben.
+- Die Integration ist unabhängig vom Kreis Steinfurt und verarbeitet ausschließlich dessen öffentlich bereitgestellte Einsatzliste.
+
+## KI-Unterstützung
+
+Die HACS-Vorbereitung dieses Projekts – Dokumentation, Prüf-Workflows, Issue-Vorlagen und Marken-Icon – wurde mit Unterstützung von KI erstellt. Die Funktionen wurden anschließend in Home Assistant praktisch geprüft.
 
 ## Entwicklung
 

@@ -1,0 +1,33 @@
+name: Fehler melden
+description: Einen Fehler der Integration Kreis Steinfurt Einsätze melden.
+title: "[Fehler]: "
+labels: ["Fehler"]
+body:
+  - type: markdown
+    attributes:
+      value: Danke für den Bericht. Bitte keine persönlichen Einsatzdaten veröffentlichen.
+  - type: input
+    id: version
+    attributes:
+      label: Integrationsversion
+      description: Zum Beispiel 1.0.0.
+    validations:
+      required: true
+  - type: input
+    id: home_assistant
+    attributes:
+      label: Home-Assistant-Version
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Fehlerbeschreibung
+      description: Was sollte passieren und was passiert stattdessen?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Protokollauszug
+      description: Relevante Zeilen aus Einstellungen → System → Protokolle. Zugangsdaten bitte entfernen.

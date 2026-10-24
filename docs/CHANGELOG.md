@@ -1,5 +1,11 @@
 # Änderungsübersicht
 
+## 1.0.0
+
+- Erste stabile Hauptversion nach erfolgreichem Praxistest.
+- HACS-Vorbereitung ergänzt: vollständige Metadaten, Deutschland-Kennzeichnung, Marken-Icon und GitHub-Prüfungen.
+- Vorlagen für Fehlerberichte und Funktionswünsche ergänzt.
+
 ## 0.7.0
 
 - Die „Letzte 10 Einsätze“-Tabelle zeigt die Position 1 bis 10.
