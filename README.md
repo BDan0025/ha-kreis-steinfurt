@@ -41,7 +41,9 @@ sind `null`, solange die öffentliche Quelle diese Angaben nicht veröffentlicht
 Zusätzlich sind `erstmals_gesehen`, `letzte_aenderung`, `abgeschlossen_am`,
 `dauer_sekunden` und `dauer` vorhanden. Die dynamische Entity wird nach Ablauf
 der ausgewählten Aufbewahrung entfernt; die Einsatzhistorie enthält den
-kompletten Verlauf bis zu diesem Zeitpunkt.
+kompletten Verlauf bis zu diesem Zeitpunkt. Bis zur Löschung behält sie ihren
+letzten bekannten Zustand und wechselt nicht zwischen Status und
+„Nicht verfügbar“.
 
 ## Dashboard-Beispiel
 
@@ -57,7 +59,10 @@ und abgeschlossene Einsätze im ausgewählten Überwachungsgebiet.
 
 [`examples/lovelace_incident_lists.yaml`](examples/lovelace_incident_lists.yaml)
 enthält eine fertige Karte mit Statistik, einer Liste laufender Einsätze und
-einer Historienliste.
+einer Historienliste. Die Listen-Attribute sind zum Schutz der Home-Assistant-
+Datenbank auf die 50 neuesten Einträge begrenzt; Statistiken und einzelne
+Einsatz-Entities berücksichtigen weiterhin die gesamte Aufbewahrungszeit. Die
+zusätzliche Historie eines Ortssensors ist auf 25 Einträge begrenzt.
 
 Die Angaben stammen ausschließlich von der veröffentlichten Liste des Kreises
 Steinfurt und können sich jederzeit ändern.
@@ -85,13 +90,16 @@ erfolgreich laufen, bevor eine Korrekturversion wie `0.2.1` vergeben wird.
 ## Einstellungen
 
 Unter **Einstellungen → Geräte & Dienste → Kreis Steinfurt Einsätze →
-Konfigurieren** lassen sich die überwachten Kommunen per Mehrfachauswahl festlegen.
+Konfigurieren** lassen sich das Abrufintervall (60 bis 3600 Sekunden) sowie die
+überwachten Kommunen per Mehrfachauswahl festlegen.
 Die Übersichtssensoren sowie Einsatz- und Ortssensoren berücksichtigen nur diese
 Auswahl.
 
+`sensor.kreis_steinfurt_abrufintervall` zeigt den aktuell verwendeten Wert in
+Sekunden an.
+
 Die Einsatzarten werden aus den veröffentlichten Daten automatisch erkannt und
-lassen sich dort ebenfalls per Mehrfachauswahl ein- oder ausschalten. Eine neue
-Einsatzart erscheint nach dem ersten Abruf in dieser Auswahl.
+über `sensor.kreis_steinfurt_einsatzarten` mitsamt ihren Zählern bereitgestellt.
 
 Für einzelne Einsatz-Entities kann eine Aufbewahrung von 48 Stunden, 7 Tagen,
 einem Monat oder dauerhaft gewählt werden. Die Integration speichert dafür die

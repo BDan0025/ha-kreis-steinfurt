@@ -17,6 +17,9 @@ from .const import DOMAIN
 from .coordinator import KreisSteinfurtCoordinator
 from .models import Einsatz
 
+_MAX_LIST_ITEMS = 50
+_MAX_CITY_HISTORY_ITEMS = 25
+
 
 def _laufende_einsaetze(einsaetze: list[Einsatz]) -> list[Einsatz]:
     """Return entries that the source does not mark as finished."""
@@ -47,6 +50,29 @@ def _einsatz_attributes(einsatz: Einsatz) -> dict[str, object]:
         "dauer_sekunden": duration_seconds,
         "dauer": _format_duration(duration_seconds),
     }
+
+
+def _einsatz_list_attributes(einsatz: Einsatz) -> dict[str, object]:
+    """Return compact incident data suitable for list sensor attributes."""
+    return {
+        "einsatznummer": einsatz.einsatznr,
+        "einsatzart": einsatz.einsatzart,
+        "ort": einsatz.ort,
+        "beginn": einsatz.beginn.strftime("%d.%m.%Y %H:%M"),
+        "beginn_iso": einsatz.beginn.isoformat(),
+        "status": einsatz.zustand,
+        "abgeschlossen_am": _datetime_to_iso(einsatz.abgeschlossen_am),
+        "dauer": _format_duration(_duration_seconds(einsatz)),
+    }
+
+
+def _compact_list(
+    einsaetze: list[Einsatz],
+    max_items: int = _MAX_LIST_ITEMS,
+) -> list[dict[str, object]]:
+    """Return at most the newest incidents without oversized attributes."""
+    newest = sorted(einsaetze, key=lambda einsatz: einsatz.beginn, reverse=True)
+    return [_einsatz_list_attributes(einsatz) for einsatz in newest[:max_items]]
 
 
 def _datetime_to_iso(value: datetime | None) -> str | None:
@@ -175,6 +201,7 @@ async def async_setup_entry(
             KreisSteinfurtEinsaetzeHeuteSensor(coordinator, entry.entry_id),
             KreisSteinfurtEinsaetzeLetzte7TageSensor(coordinator, entry.entry_id),
             KreisSteinfurtEinsatzartenSensor(coordinator, entry.entry_id),
+            KreisSteinfurtAbrufintervallSensor(coordinator, entry.entry_id),
             *_new_dynamic_entities(),
         ]
     )
@@ -246,7 +273,7 @@ class KreisSteinfurtEinsaetzeSensor(_KreisSteinfurtCoordinatorSensor):
             "laufende_einsaetze": len(_laufende_einsaetze(self._einsaetze)),
             "einsatznummern": [einsatz.einsatznr for einsatz in self._einsaetze],
             "orte": sorted({einsatz.ort for einsatz in self._einsaetze}),
-            "einsaetze": [_einsatz_attributes(einsatz) for einsatz in self._einsaetze],
+            "einsaetze": _compact_list(self._einsaetze),
         }
 
 
@@ -270,7 +297,7 @@ class KreisSteinfurtLaufendeEinsaetzeSensor(_KreisSteinfurtCoordinatorSensor):
     def extra_state_attributes(self) -> dict[str, object]:
         """Return the currently running incidents."""
         laufende = _laufende_einsaetze(self._einsaetze)
-        return {"einsaetze": [_einsatz_attributes(einsatz) for einsatz in laufende]}
+        return {"einsaetze": _compact_list(laufende)}
 
 
 class KreisSteinfurtLetzte24StundenSensor(_KreisSteinfurtCoordinatorSensor):
@@ -298,7 +325,7 @@ class KreisSteinfurtLetzte24StundenSensor(_KreisSteinfurtCoordinatorSensor):
     @property
     def extra_state_attributes(self) -> dict[str, object]:
         """Return the incidents in the selected time period."""
-        return {"einsaetze": [_einsatz_attributes(einsatz) for einsatz in self._letzte_24_stunden]}
+        return {"einsaetze": _compact_list(self._letzte_24_stunden)}
 
 
 class KreisSteinfurtHistorieSensor(_KreisSteinfurtCoordinatorSensor):
@@ -320,11 +347,11 @@ class KreisSteinfurtHistorieSensor(_KreisSteinfurtCoordinatorSensor):
     @property
     def extra_state_attributes(self) -> dict[str, object]:
         """Return retained incidents with their lifecycle details."""
-        einsaetze = sorted(self._historie, key=lambda einsatz: einsatz.beginn, reverse=True)
         return {
             "aufbewahrung": self.coordinator.retention,
             "einsatzarten": self.coordinator.known_incident_types,
-            "einsaetze": [_einsatz_attributes(einsatz) for einsatz in einsaetze],
+            "einsatzanzahl": len(self._historie),
+            "einsaetze": _compact_list(self._historie),
         }
 
 
@@ -361,7 +388,6 @@ class _KreisSteinfurtZeitraumSensor(_KreisSteinfurtCoordinatorSensor):
             "gesamt": len(einsaetze),
             "nach_ort": by_city,
             "nach_einsatzart": by_type,
-            "einsaetze": [_einsatz_attributes(einsatz) for einsatz in einsaetze],
         }
 
 
@@ -425,6 +451,25 @@ class KreisSteinfurtEinsatzartenSensor(_KreisSteinfurtCoordinatorSensor):
         }
 
 
+class KreisSteinfurtAbrufintervallSensor(_KreisSteinfurtCoordinatorSensor):
+    """Expose the configured source polling interval."""
+
+    _attr_name = "Kreis Steinfurt Abrufintervall"
+    _attr_suggested_object_id = "kreis_steinfurt_abrufintervall"
+    _attr_native_unit_of_measurement = "s"
+    _attr_icon = "mdi:timer-outline"
+
+    def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
+        """Initialize the polling interval sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_abrufintervall_{entry_id}"
+
+    @property
+    def native_value(self) -> int:
+        """Return the configured polling interval in seconds."""
+        return self.coordinator.scan_interval
+
+
 class KreisSteinfurtCitySensor(_KreisSteinfurtCoordinatorSensor):
     """Count incidents for one city."""
 
@@ -462,8 +507,8 @@ class KreisSteinfurtCitySensor(_KreisSteinfurtCoordinatorSensor):
             "laufende_einsaetze": len(_laufende_einsaetze(einsaetze)),
             "einsatzanzahl_heute": len(_einsaetze_in_zeitraum(historie, 1)),
             "einsatzanzahl_letzte_7_tage": len(_einsaetze_in_zeitraum(historie, 7)),
-            "einsaetze": [_einsatz_attributes(einsatz) for einsatz in einsaetze],
-            "historie": [_einsatz_attributes(einsatz) for einsatz in historie],
+            "einsaetze": _compact_list(einsaetze),
+            "historie": _compact_list(historie, _MAX_CITY_HISTORY_ITEMS),
         }
 
 
@@ -479,6 +524,7 @@ class KreisSteinfurtEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
         """Initialize an incident sensor."""
         super().__init__(coordinator)
         self._einsatznr = einsatznr
+        self._last_einsatz: Einsatz | None = coordinator.get_retained_einsatz(einsatznr)
         incident_id = slugify(einsatznr)
         self._attr_name = f"Kreis Steinfurt Einsatz {einsatznr}"
         self._attr_suggested_object_id = f"kreis_steinfurt_einsatz_{incident_id}"
@@ -486,12 +532,14 @@ class KreisSteinfurtEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
 
     @property
     def _einsatz(self) -> Einsatz | None:
-        """Return this sensor's incident while its retention is active."""
-        return self.coordinator.get_retained_einsatz(self._einsatznr)
+        """Return the retained incident or the last stable source snapshot."""
+        if einsatz := self.coordinator.get_retained_einsatz(self._einsatznr):
+            self._last_einsatz = einsatz
+        return self._last_einsatz
 
     @property
     def available(self) -> bool:
-        """Mark the entity unavailable after its incident leaves the 48-hour list."""
+        """Keep a retained entity available until it is removed by retention cleanup."""
         return super().available and self._einsatz is not None
 
     @property

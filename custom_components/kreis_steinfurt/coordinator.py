@@ -16,6 +16,7 @@ from .const import (
     CONF_AREAS,
     CONF_INCIDENT_TYPES,
     CONF_RETENTION,
+    CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     KREIS_STEINFURT_AREAS,
@@ -45,7 +46,7 @@ class KreisSteinfurtCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(
-                seconds=DEFAULT_SCAN_INTERVAL,
+                seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
             ),
         )
 
@@ -62,6 +63,11 @@ class KreisSteinfurtCoordinator(DataUpdateCoordinator):
     def retention(self) -> str:
         """Return the configured incident entity retention."""
         return self._entry.options.get(CONF_RETENTION, RETENTION_48_HOURS)
+
+    @property
+    def scan_interval(self) -> int:
+        """Return the configured source polling interval in seconds."""
+        return self._entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     @property
     def monitored_incident_types(self) -> set[str] | None:

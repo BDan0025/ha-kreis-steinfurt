@@ -10,10 +10,13 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     CONF_AREAS,
-    CONF_INCIDENT_TYPES,
     CONF_RETENTION,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     KREIS_STEINFURT_AREAS,
+    MAX_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
     NAME,
     RETENTION_48_HOURS,
     RETENTION_OPTIONS,
@@ -34,7 +37,7 @@ class KreisSteinfurtConfigFlow(
         config_entry: config_entries.ConfigEntry,
     ) -> KreisSteinfurtOptionsFlow:
         """Return the options flow for this integration."""
-        return KreisSteinfurtOptionsFlow(config_entry)
+        return KreisSteinfurtOptionsFlow()
 
     async def async_step_user(self, user_input=None):
         """Handle the initial setup."""
@@ -55,17 +58,21 @@ class KreisSteinfurtConfigFlow(
 class KreisSteinfurtOptionsFlow(config_entries.OptionsFlow):
     """Handle user-configurable monitoring settings."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize the options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(self, user_input: dict | None = None):
-        """Manage retention and monitored areas."""
+        """Manage polling, retention and monitored areas."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         options = self.config_entry.options
-        data: dict = {
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_SCAN_INTERVAL,
+                    default=options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                ): vol.All(
+                    vol.Coerce(int),
+                    vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL),
+                ),
                 vol.Required(
                     CONF_RETENTION,
                     default=options.get(CONF_RETENTION, RETENTION_48_HOURS),
@@ -85,20 +92,7 @@ class KreisSteinfurtOptionsFlow(config_entries.OptionsFlow):
                         translation_key="areas",
                     )
                 ),
-        }
-
-        coordinator = self.hass.data.get(DOMAIN, {}).get(self.config_entry.entry_id)
-        known_types = coordinator.known_incident_types if coordinator else []
-        selected_types = options.get(CONF_INCIDENT_TYPES, known_types)
-        available_types = sorted(set(known_types) | set(selected_types))
-        if available_types:
-            data[vol.Required(CONF_INCIDENT_TYPES, default=selected_types)] = SelectSelector(
-                SelectSelectorConfig(
-                    options=available_types,
-                    multiple=True,
-                )
-            )
-
-        data_schema = vol.Schema(data)
+            }
+        )
 
         return self.async_show_form(step_id="init", data_schema=data_schema)

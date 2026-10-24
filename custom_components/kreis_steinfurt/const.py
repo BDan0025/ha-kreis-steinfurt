@@ -7,6 +7,7 @@ NAME = "Kreis Steinfurt Einsätze"
 CONF_AREAS = "areas"
 CONF_INCIDENT_TYPES = "incident_types"
 CONF_RETENTION = "retention"
+CONF_SCAN_INTERVAL = "scan_interval"
 
 RETENTION_48_HOURS = "48_hours"
 RETENTION_7_DAYS = "7_days"
@@ -48,6 +49,8 @@ KREIS_STEINFURT_AREAS = (
 )
 
 DEFAULT_SCAN_INTERVAL = 60
+MIN_SCAN_INTERVAL = 60
+MAX_SCAN_INTERVAL = 3600
 
 SOURCE_URL = (
     "https://www.kreis-steinfurt.de/"

@@ -10,11 +10,11 @@
     "step": {
       "init": {
         "title": "Überwachung einstellen",
-        "description": "Wähle Kommunen, Einsatzarten und die Aufbewahrungsdauer einzelner Einsatz-Entities.",
+        "description": "Lege Abrufintervall, überwachte Kommunen und die Aufbewahrungsdauer einzelner Einsatz-Entities fest.",
         "data": {
+          "scan_interval": "Abrufintervall in Sekunden (60 bis 3600)",
           "retention": "Einsatz-Entities löschen nach",
-          "areas": "Überwachte Kommunen",
-          "incident_types": "Überwachte Einsatzarten"
+          "areas": "Überwachte Kommunen"
         }
       }
     }
