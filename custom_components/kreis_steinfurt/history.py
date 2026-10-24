@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import timedelta
 from typing import Any
 
@@ -52,9 +53,12 @@ class EinsatzHistory:
     async def async_update(self, einsaetze: list[Einsatz], retention: str) -> None:
         """Save new or changed incidents and remove expired records."""
         changed = False
+        now = dt_util.utcnow()
         for einsatz in einsaetze:
-            if self._einsaetze.get(einsatz.einsatznr) != einsatz:
-                self._einsaetze[einsatz.einsatznr] = einsatz
+            previous = self._einsaetze.get(einsatz.einsatznr)
+            stored = self._with_history(previous, einsatz, now)
+            if previous != stored:
+                self._einsaetze[einsatz.einsatznr] = stored
                 changed = True
 
         if self._prune(retention):
@@ -64,6 +68,36 @@ class EinsatzHistory:
             await self._store.async_save(
                 {"einsaetze": [einsatz.as_dict() for einsatz in self._einsaetze.values()]}
             )
+
+    @staticmethod
+    def _with_history(
+        previous: Einsatz | None,
+        current: Einsatz,
+        now,
+    ) -> Einsatz:
+        """Return source data enriched with lifecycle timestamps."""
+        if previous is None:
+            completed_at = now if _is_completed(current) else None
+            return replace(
+                current,
+                erstmals_gesehen=now,
+                letzte_aenderung=now,
+                abgeschlossen_am=completed_at,
+            )
+
+        source_changed = _source_fields_changed(previous, current)
+        completed_at = previous.abgeschlossen_am
+        if completed_at is None and _is_completed(current):
+            completed_at = now
+
+        return replace(
+            current,
+            erstmals_gesehen=previous.erstmals_gesehen or now,
+            letzte_aenderung=(
+                now if source_changed or previous.letzte_aenderung is None else previous.letzte_aenderung
+            ),
+            abgeschlossen_am=completed_at,
+        )
 
     def retained_einsaetze(self, retention: str) -> list[Einsatz]:
         """Return incidents still covered by the configured retention period."""
@@ -92,3 +126,23 @@ class EinsatzHistory:
 
         self._einsaetze = retained
         return True
+
+
+def _is_completed(einsatz: Einsatz) -> bool:
+    """Return whether the source marks an incident as completed."""
+    return einsatz.zustand.casefold() == "abgeschlossen"
+
+
+def _source_fields_changed(previous: Einsatz, current: Einsatz) -> bool:
+    """Compare only values supplied by the public incident source."""
+    return any(
+        getattr(previous, field) != getattr(current, field)
+        for field in (
+            "einsatzart",
+            "ort",
+            "beginn",
+            "zustand",
+            "strasse",
+            "sachverhalt",
+        )
+    )

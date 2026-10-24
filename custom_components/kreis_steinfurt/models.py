@@ -18,6 +18,9 @@ class Einsatz:
 
     strasse: str | None = None
     sachverhalt: str | None = None
+    erstmals_gesehen: datetime | None = None
+    letzte_aenderung: datetime | None = None
+    abgeschlossen_am: datetime | None = None
 
     def as_dict(self) -> dict[str, str | None]:
         """Serialize the incident for Home Assistant storage."""
@@ -29,6 +32,9 @@ class Einsatz:
             "zustand": self.zustand,
             "strasse": self.strasse,
             "sachverhalt": self.sachverhalt,
+            "erstmals_gesehen": _datetime_to_string(self.erstmals_gesehen),
+            "letzte_aenderung": _datetime_to_string(self.letzte_aenderung),
+            "abgeschlossen_am": _datetime_to_string(self.abgeschlossen_am),
         }
 
     @classmethod
@@ -42,4 +48,17 @@ class Einsatz:
             zustand=str(data["zustand"]),
             strasse=data.get("strasse"),
             sachverhalt=data.get("sachverhalt"),
+            erstmals_gesehen=_datetime_from_string(data.get("erstmals_gesehen")),
+            letzte_aenderung=_datetime_from_string(data.get("letzte_aenderung")),
+            abgeschlossen_am=_datetime_from_string(data.get("abgeschlossen_am")),
         )
+
+
+def _datetime_to_string(value: datetime | None) -> str | None:
+    """Serialize an optional datetime."""
+    return value.isoformat() if value is not None else None
+
+
+def _datetime_from_string(value: str | None) -> datetime | None:
+    """Deserialize an optional datetime."""
+    return datetime.fromisoformat(value) if value else None

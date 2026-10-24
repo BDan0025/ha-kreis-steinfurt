@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
 
 from .const import DOMAIN
@@ -26,19 +27,57 @@ def _laufende_einsaetze(einsaetze: list[Einsatz]) -> list[Einsatz]:
     ]
 
 
-def _einsatz_attributes(einsatz: Einsatz) -> dict[str, str | None]:
+def _einsatz_attributes(einsatz: Einsatz) -> dict[str, object]:
     """Return the public attributes for an individual incident."""
+    duration_seconds = _duration_seconds(einsatz)
     return {
         "einsatznummer": einsatz.einsatznr,
         "einsatzart": einsatz.einsatzart,
         "ort": einsatz.ort,
         "beginn": einsatz.beginn.strftime("%d.%m.%Y %H:%M"),
+        "beginn_iso": einsatz.beginn.isoformat(),
         "status": einsatz.zustand,
         "strasse": einsatz.strasse,
         "sachverhalt": einsatz.sachverhalt,
         "latitude": None,
         "longitude": None,
+        "erstmals_gesehen": _datetime_to_iso(einsatz.erstmals_gesehen),
+        "letzte_aenderung": _datetime_to_iso(einsatz.letzte_aenderung),
+        "abgeschlossen_am": _datetime_to_iso(einsatz.abgeschlossen_am),
+        "dauer_sekunden": duration_seconds,
+        "dauer": _format_duration(duration_seconds),
     }
+
+
+def _datetime_to_iso(value: datetime | None) -> str | None:
+    """Return an optional datetime as an ISO value."""
+    return value.isoformat() if value is not None else None
+
+
+def _duration_seconds(einsatz: Einsatz) -> int:
+    """Return elapsed duration from published start to completion or now."""
+    end = einsatz.abgeschlossen_am
+    if end is None:
+        end_naive = dt_util.now().replace(tzinfo=None)
+    else:
+        end_naive = dt_util.as_local(end).replace(tzinfo=None)
+    return max(0, int((end_naive - einsatz.beginn).total_seconds()))
+
+
+def _format_duration(seconds: int) -> str:
+    """Format a duration for Home Assistant attributes."""
+    hours, remainder = divmod(seconds, 3600)
+    minutes = remainder // 60
+    return f"{hours} Std. {minutes} Min."
+
+
+def _einsaetze_in_zeitraum(einsaetze: list[Einsatz], days: int) -> list[Einsatz]:
+    """Return incidents today or within the previous number of days."""
+    now = dt_util.now().replace(tzinfo=None)
+    since = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    if days > 1:
+        since = now - timedelta(days=days)
+    return [einsatz for einsatz in einsaetze if einsatz.beginn >= since]
 
 
 async def async_setup_entry(
@@ -52,11 +91,19 @@ async def async_setup_entry(
     known_cities: set[str] = set()
     incident_entities: dict[str, KreisSteinfurtEinsatzSensor] = {}
 
+    def _is_monitored(einsatz: Einsatz) -> bool:
+        """Return whether an incident matches the configured options."""
+        types = coordinator.monitored_incident_types
+        return (
+            einsatz.ort in coordinator.monitored_areas
+            and (types is None or einsatz.einsatzart in types)
+        )
+
     def _new_dynamic_entities() -> list[SensorEntity]:
         einsaetze = [
             einsatz
             for einsatz in coordinator.retained_einsaetze
-            if einsatz.ort in coordinator.monitored_areas
+            if _is_monitored(einsatz)
         ]
         new_entities: list[SensorEntity] = []
 
@@ -95,7 +142,7 @@ async def async_setup_entry(
         retained = [
             einsatz
             for einsatz in coordinator.retained_einsaetze
-            if einsatz.ort in coordinator.monitored_areas
+            if _is_monitored(einsatz)
         ]
         incident_unique_ids = {
             f"{DOMAIN}_einsatz_{slugify(einsatz.einsatznr)}_{entry.entry_id}"
@@ -124,6 +171,10 @@ async def async_setup_entry(
             KreisSteinfurtEinsaetzeSensor(coordinator, entry.entry_id),
             KreisSteinfurtLaufendeEinsaetzeSensor(coordinator, entry.entry_id),
             KreisSteinfurtLetzte24StundenSensor(coordinator, entry.entry_id),
+            KreisSteinfurtHistorieSensor(coordinator, entry.entry_id),
+            KreisSteinfurtEinsaetzeHeuteSensor(coordinator, entry.entry_id),
+            KreisSteinfurtEinsaetzeLetzte7TageSensor(coordinator, entry.entry_id),
+            KreisSteinfurtEinsatzartenSensor(coordinator, entry.entry_id),
             *_new_dynamic_entities(),
         ]
     )
@@ -148,10 +199,27 @@ class _KreisSteinfurtCoordinatorSensor(
     def _einsaetze(self) -> list[Einsatz]:
         """Return current incidents in the configured monitoring area."""
         return [
-            einsatz
+            self.coordinator.get_retained_einsatz(einsatz.einsatznr) or einsatz
             for einsatz in self.coordinator.data or []
-            if einsatz.ort in self.coordinator.monitored_areas
+            if self._is_monitored(einsatz)
         ]
+
+    @property
+    def _historie(self) -> list[Einsatz]:
+        """Return retained incidents in the configured monitoring scope."""
+        return [
+            einsatz
+            for einsatz in self.coordinator.retained_einsaetze
+            if self._is_monitored(einsatz)
+        ]
+
+    def _is_monitored(self, einsatz: Einsatz) -> bool:
+        """Return whether an incident matches the selected area and type."""
+        types = self.coordinator.monitored_incident_types
+        return (
+            einsatz.ort in self.coordinator.monitored_areas
+            and (types is None or einsatz.einsatzart in types)
+        )
 
 
 class KreisSteinfurtEinsaetzeSensor(_KreisSteinfurtCoordinatorSensor):
@@ -219,7 +287,7 @@ class KreisSteinfurtLetzte24StundenSensor(_KreisSteinfurtCoordinatorSensor):
     @property
     def _letzte_24_stunden(self) -> list[Einsatz]:
         """Return incidents started in the last 24 hours."""
-        since = datetime.now() - timedelta(hours=24)
+        since = dt_util.now().replace(tzinfo=None) - timedelta(hours=24)
         return [einsatz for einsatz in self._einsaetze if einsatz.beginn >= since]
 
     @property
@@ -231,6 +299,130 @@ class KreisSteinfurtLetzte24StundenSensor(_KreisSteinfurtCoordinatorSensor):
     def extra_state_attributes(self) -> dict[str, object]:
         """Return the incidents in the selected time period."""
         return {"einsaetze": [_einsatz_attributes(einsatz) for einsatz in self._letzte_24_stunden]}
+
+
+class KreisSteinfurtHistorieSensor(_KreisSteinfurtCoordinatorSensor):
+    """Expose retained incidents for dashboard lists and automations."""
+
+    _attr_name = "Kreis Steinfurt Einsatzhistorie"
+    _attr_suggested_object_id = "kreis_steinfurt_einsatzhistorie"
+
+    def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
+        """Initialize the history sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_einsatzhistorie_{entry_id}"
+
+    @property
+    def native_value(self) -> int:
+        """Return number of incidents retained in the selected scope."""
+        return len(self._historie)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        """Return retained incidents with their lifecycle details."""
+        einsaetze = sorted(self._historie, key=lambda einsatz: einsatz.beginn, reverse=True)
+        return {
+            "aufbewahrung": self.coordinator.retention,
+            "einsatzarten": self.coordinator.known_incident_types,
+            "einsaetze": [_einsatz_attributes(einsatz) for einsatz in einsaetze],
+        }
+
+
+class _KreisSteinfurtZeitraumSensor(_KreisSteinfurtCoordinatorSensor):
+    """Base sensor for retained-incident statistics."""
+
+    _days: int
+
+    @property
+    def _zeitraum_einsaetze(self) -> list[Einsatz]:
+        """Return retained incidents in the sensor period."""
+        return _einsaetze_in_zeitraum(self._historie, self._days)
+
+    @property
+    def native_value(self) -> int:
+        """Return the number of incidents in the sensor period."""
+        return len(self._zeitraum_einsaetze)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        """Return totals per municipality and incident type."""
+        einsaetze = self._zeitraum_einsaetze
+        by_city = {
+            city: len([einsatz for einsatz in einsaetze if einsatz.ort == city])
+            for city in sorted({einsatz.ort for einsatz in einsaetze})
+        }
+        by_type = {
+            incident_type: len(
+                [einsatz for einsatz in einsaetze if einsatz.einsatzart == incident_type]
+            )
+            for incident_type in sorted({einsatz.einsatzart for einsatz in einsaetze})
+        }
+        return {
+            "gesamt": len(einsaetze),
+            "nach_ort": by_city,
+            "nach_einsatzart": by_type,
+            "einsaetze": [_einsatz_attributes(einsatz) for einsatz in einsaetze],
+        }
+
+
+class KreisSteinfurtEinsaetzeHeuteSensor(_KreisSteinfurtZeitraumSensor):
+    """Count retained incidents that started today (last 24 hours)."""
+
+    _attr_name = "Kreis Steinfurt Einsätze heute"
+    _attr_suggested_object_id = "kreis_steinfurt_einsaetze_heute"
+    _days = 1
+
+    def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
+        """Initialize the daily statistics sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_einsaetze_heute_{entry_id}"
+
+
+class KreisSteinfurtEinsaetzeLetzte7TageSensor(_KreisSteinfurtZeitraumSensor):
+    """Count retained incidents from the last seven days."""
+
+    _attr_name = "Kreis Steinfurt Einsätze letzte 7 Tage"
+    _attr_suggested_object_id = "kreis_steinfurt_einsaetze_letzte_7_tage"
+    _days = 7
+
+    def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
+        """Initialize the weekly statistics sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_einsaetze_letzte_7_tage_{entry_id}"
+
+
+class KreisSteinfurtEinsatzartenSensor(_KreisSteinfurtCoordinatorSensor):
+    """Expose observed incident types and counts for filters and dashboards."""
+
+    _attr_name = "Kreis Steinfurt Einsatzarten"
+    _attr_suggested_object_id = "kreis_steinfurt_einsatzarten"
+
+    def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
+        """Initialize the incident-type overview sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_einsatzarten_{entry_id}"
+
+    @property
+    def native_value(self) -> int:
+        """Return the number of incident types currently known."""
+        return len(self.coordinator.known_incident_types)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        """Return per-type totals for current and retained incidents."""
+        return {
+            "einsatzarten": {
+                incident_type: {
+                    "aktuell": len(
+                        [einsatz for einsatz in self._einsaetze if einsatz.einsatzart == incident_type]
+                    ),
+                    "historie": len(
+                        [einsatz for einsatz in self._historie if einsatz.einsatzart == incident_type]
+                    ),
+                }
+                for incident_type in self.coordinator.known_incident_types
+            }
+        }
 
 
 class KreisSteinfurtCitySensor(_KreisSteinfurtCoordinatorSensor):
@@ -251,6 +443,11 @@ class KreisSteinfurtCitySensor(_KreisSteinfurtCoordinatorSensor):
         return [einsatz for einsatz in self._einsaetze if einsatz.ort == self._city]
 
     @property
+    def _city_historie(self) -> list[Einsatz]:
+        """Return retained incidents belonging to this city."""
+        return [einsatz for einsatz in self._historie if einsatz.ort == self._city]
+
+    @property
     def native_value(self) -> int:
         """Return the number of incidents in this city."""
         return len(self._city_einsaetze)
@@ -259,10 +456,14 @@ class KreisSteinfurtCitySensor(_KreisSteinfurtCoordinatorSensor):
     def extra_state_attributes(self) -> dict[str, object]:
         """Return the city's incidents and running count."""
         einsaetze = self._city_einsaetze
+        historie = self._city_historie
         return {
             "ort": self._city,
             "laufende_einsaetze": len(_laufende_einsaetze(einsaetze)),
+            "einsatzanzahl_heute": len(_einsaetze_in_zeitraum(historie, 1)),
+            "einsatzanzahl_letzte_7_tage": len(_einsaetze_in_zeitraum(historie, 7)),
             "einsaetze": [_einsatz_attributes(einsatz) for einsatz in einsaetze],
+            "historie": [_einsatz_attributes(einsatz) for einsatz in historie],
         }
 
 

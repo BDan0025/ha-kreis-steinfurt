@@ -5,6 +5,7 @@ DOMAIN = "kreis_steinfurt"
 NAME = "Kreis Steinfurt Einsätze"
 
 CONF_AREAS = "areas"
+CONF_INCIDENT_TYPES = "incident_types"
 CONF_RETENTION = "retention"
 
 RETENTION_48_HOURS = "48_hours"

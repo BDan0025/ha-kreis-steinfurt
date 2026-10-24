@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import (
 from .client import KreisSteinfurtClient
 from .const import (
     CONF_AREAS,
+    CONF_INCIDENT_TYPES,
     CONF_RETENTION,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -39,6 +40,15 @@ class KreisSteinfurtCoordinator(DataUpdateCoordinator):
             async_get_clientsession(hass)
         )
 
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(
+                seconds=DEFAULT_SCAN_INTERVAL,
+            ),
+        )
+
     async def async_initialize(self) -> None:
         """Load retained incidents before the first source refresh."""
         await self._history.async_load()
@@ -54,6 +64,24 @@ class KreisSteinfurtCoordinator(DataUpdateCoordinator):
         return self._entry.options.get(CONF_RETENTION, RETENTION_48_HOURS)
 
     @property
+    def monitored_incident_types(self) -> set[str] | None:
+        """Return configured incident-type filter, or all types when unset."""
+        if CONF_INCIDENT_TYPES not in self._entry.options:
+            return None
+        return set(self._entry.options[CONF_INCIDENT_TYPES])
+
+    @property
+    def known_incident_types(self) -> list[str]:
+        """Return all incident types observed in current or stored data."""
+        return sorted(
+            {
+                einsatz.einsatzart
+                for einsatz in [*(self.data or []), *self.retained_einsaetze]
+                if einsatz.einsatzart
+            }
+        )
+
+    @property
     def retained_einsaetze(self) -> list[Einsatz]:
         """Return stored incidents still within their retention period."""
         return self._history.retained_einsaetze(self.retention)
@@ -61,15 +89,6 @@ class KreisSteinfurtCoordinator(DataUpdateCoordinator):
     def get_retained_einsatz(self, einsatznr: str) -> Einsatz | None:
         """Return one retained incident for a dynamic entity."""
         return self._history.get(einsatznr, self.retention)
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=timedelta(
-                seconds=DEFAULT_SCAN_INTERVAL,
-            ),
-        )
 
     async def _async_update_data(self):
         """Fetch data from the website."""

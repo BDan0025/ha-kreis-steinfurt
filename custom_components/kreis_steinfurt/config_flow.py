@@ -10,6 +10,7 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     CONF_AREAS,
+    CONF_INCIDENT_TYPES,
     CONF_RETENTION,
     DOMAIN,
     KREIS_STEINFURT_AREAS,
@@ -64,8 +65,7 @@ class KreisSteinfurtOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = self.config_entry.options
-        data_schema = vol.Schema(
-            {
+        data: dict = {
                 vol.Required(
                     CONF_RETENTION,
                     default=options.get(CONF_RETENTION, RETENTION_48_HOURS),
@@ -85,7 +85,20 @@ class KreisSteinfurtOptionsFlow(config_entries.OptionsFlow):
                         translation_key="areas",
                     )
                 ),
-            }
-        )
+        }
+
+        coordinator = self.hass.data.get(DOMAIN, {}).get(self.config_entry.entry_id)
+        known_types = coordinator.known_incident_types if coordinator else []
+        selected_types = options.get(CONF_INCIDENT_TYPES, known_types)
+        available_types = sorted(set(known_types) | set(selected_types))
+        if available_types:
+            data[vol.Required(CONF_INCIDENT_TYPES, default=selected_types)] = SelectSelector(
+                SelectSelectorConfig(
+                    options=available_types,
+                    multiple=True,
+                )
+            )
+
+        data_schema = vol.Schema(data)
 
         return self.async_show_form(step_id="init", data_schema=data_schema)
