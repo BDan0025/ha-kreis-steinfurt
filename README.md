@@ -42,8 +42,12 @@ Attribute `einsatznummer`, `einsatzart`, `ort`, `beginn`, `status`, `strasse`,
 Sachverhalt sind `null`, solange die öffentliche Quelle diese Angaben nicht
 veröffentlicht. Koordinaten können wahlweise als Stadtmittelpunkt ergänzt werden.
 Zusätzlich sind `erstmals_gesehen`, `letzte_aenderung`, `abgeschlossen_am`,
-`dauer_sekunden` und `dauer` vorhanden. Die dynamische Entity wird nach Ablauf
-der ausgewählten Aufbewahrung entfernt; die Einsatzhistorie enthält den
+`abgeschlossen_vor`, `dauer_sekunden` und `dauer` vorhanden. `dauer` ist bei
+laufenden Einsätzen die Laufzeit bis jetzt, bei abgeschlossenen Einsätzen die
+Zeit zwischen Beginn und Abschluss. `abgeschlossen_vor` wird nur für
+abgeschlossene Einsätze ausgegeben und aktualisiert sich im 10-Minuten-Takt,
+ohne einen weiteren Abruf der Quelle auszulösen. Die dynamische Entity wird
+nach Ablauf der ausgewählten Aufbewahrung entfernt; die Einsatzhistorie enthält den
 kompletten Verlauf bis zu diesem Zeitpunkt. Bis zur Löschung behält sie ihren
 letzten bekannten Zustand und wechselt nicht zwischen Status und
 „Nicht verfügbar“.
@@ -55,17 +59,21 @@ eingefügt werden. Die Beispiele verwenden die Entity-IDs dieser Integration:
 
 - [`lovelace_overview.yaml`](examples/lovelace_overview.yaml) – kompakte Übersicht
 - [`lovelace_ibbenbueren.yaml`](examples/lovelace_ibbenbueren.yaml) – aktuelle Einsätze in Ibbenbüren
+- [`lovelace_city_overview.yaml`](examples/lovelace_city_overview.yaml) – Stadtübersicht mit aktuell, laufend, heute und letzte 7 Tage
+- [`lovelace_city_last_incident.yaml`](examples/lovelace_city_last_incident.yaml) – letzter Einsatz einer Stadt mit Dauer
+- [`lovelace_city_history.yaml`](examples/lovelace_city_history.yaml) – gespeicherte Einsatzhistorie einer Stadt
 - [`lovelace_last_incident_card.yaml`](examples/lovelace_last_incident_card.yaml) – letzter Einsatz mit Dauer
 - [`lovelace_incident_detail.yaml`](examples/lovelace_incident_detail.yaml) – automatisch wechselnde Details des letzten Einsatzes
 - [`lovelace_latest_incident_map.yaml`](examples/lovelace_latest_incident_map.yaml) – Karte des letzten Einsatzes
 - [`lovelace_alarm_status.yaml`](examples/lovelace_alarm_status.yaml) – aktive und abgeschlossene Alarme
 - [`lovelace_statistics.yaml`](examples/lovelace_statistics.yaml) – heute und letzte 7 Tage
-- [`lovelace_incident_types.yaml`](examples/lovelace_incident_types.yaml) – Verteilung nach Einsatzarten (ApexCharts Card)
+- [`lovelace_incident_types.yaml`](examples/lovelace_incident_types.yaml) – Auswertung nach Einsatzarten
 - [`lovelace_active_alarms.yaml`](examples/lovelace_active_alarms.yaml) – Liste aktiver Alarme
 - [`lovelace_history.yaml`](examples/lovelace_history.yaml) – Einsatzhistorie
 
-Für eine andere Stadt in der Ortskarte Titel und Entity-ID
-`sensor.kreis_steinfurt_einsatze_ibbenburen` entsprechend anpassen.
+Für eine andere Stadt in den Ortskarten Titel und Entity-IDs entsprechend
+anpassen. Als Vorlage dient Ibbenbüren, zum Beispiel
+`sensor.kreis_steinfurt_einsatze_ibbenburen`.
 
 Die bisherigen kombinierten Vorlagen
 [`lovelace_cards.yaml`](examples/lovelace_cards.yaml) und

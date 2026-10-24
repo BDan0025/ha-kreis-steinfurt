@@ -16,7 +16,7 @@ from .const import (
     CONF_AREAS,
     CONF_INCIDENT_TYPES,
     CONF_RETENTION,
-    CONF_MAP_LOCATION_MODE,
+    CONF_KARTENPOSITION,
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -67,9 +67,9 @@ class KreisSteinfurtCoordinator(DataUpdateCoordinator):
         return self._entry.options.get(CONF_RETENTION, RETENTION_48_HOURS)
 
     @property
-    def map_location_mode(self) -> str:
+    def kartenposition(self) -> str:
         """Return the configured incident map position strategy."""
-        return self._entry.options.get(CONF_MAP_LOCATION_MODE, MAP_LOCATION_AUTOMATIC)
+        return self._entry.options.get(CONF_KARTENPOSITION, MAP_LOCATION_AUTOMATIC)
 
     @property
     def scan_interval(self) -> int:

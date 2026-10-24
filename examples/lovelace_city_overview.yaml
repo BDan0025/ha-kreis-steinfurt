@@ -1,0 +1,11 @@
+# Einzelkarte: Stadtübersicht. Für eine andere Stadt Titel und Entity-ID anpassen.
+type: markdown
+title: Ibbenbüren – Übersicht
+content: |-
+  {% set entity = 'sensor.kreis_steinfurt_einsatze_ibbenburen' %}
+  | Kennzahl | Anzahl |
+  | :--- | ---: |
+  | Aktuelle Einsätze | {{ states(entity) | int(0) }} |
+  | Laufende Einsätze | {{ state_attr(entity, 'laufende_einsaetze') | int(0) }} |
+  | Einsätze heute | {{ state_attr(entity, 'einsatzanzahl_heute') | int(0) }} |
+  | Einsätze letzte 7 Tage | {{ state_attr(entity, 'einsatzanzahl_letzte_7_tage') | int(0) }} |

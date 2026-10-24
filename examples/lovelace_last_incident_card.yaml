@@ -9,7 +9,13 @@ content: |
   **Ort:** {{ state_attr(entity, 'ort') | default('–') }}<br>
   **Beginn:** {{ state_attr(entity, 'beginn') | default('–') }}<br>
   **Zustand:** {{ states(entity) }}<br>
-  **Dauer:** {{ state_attr(entity, 'dauer') | default('wird ermittelt') }}
+  {% if state_attr(entity, 'abgeschlossen_am') %}
+  **Abgeschlossen am:** {{ as_local(as_datetime(state_attr(entity, 'abgeschlossen_am'))).strftime('%d.%m.%Y %H:%M') }}<br>
+  **Einsatzdauer:** {{ state_attr(entity, 'dauer') | default('–') }}<br>
+  **Abgeschlossen vor:** {{ state_attr(entity, 'abgeschlossen_vor') | default('–') }}
+  {% else %}
+  **Laufzeit bis jetzt:** {{ state_attr(entity, 'dauer') | default('wird ermittelt') }}
+  {% endif %}
   {% else %}
   Aktuell liegen für das ausgewählte Gebiet keine Einsätze vor.
   {% endif %}

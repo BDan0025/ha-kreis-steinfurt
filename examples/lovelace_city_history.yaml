@@ -1,0 +1,14 @@
+# Einzelkarte: Gespeicherte Einsatzhistorie einer Stadt. Für eine andere Stadt Titel und Entity-ID anpassen.
+type: markdown
+title: Ibbenbüren – Einsatzhistorie
+content: |-
+  {% set historie = state_attr('sensor.kreis_steinfurt_einsatze_ibbenburen', 'historie') or [] %}
+  {% if historie | count > 0 %}
+  | Beginn | Einsatzart | Zustand | Einsatzdauer |
+  | :--- | :--- | :--- | :--- |
+  {% for e in historie[:25] -%}
+  | {{ e.beginn | default(e.zeit | default('–')) }} | **{{ e.einsatzart | default(e.sachverhalt | default('–')) }}** | {{ e.status | default(e.zustand | default('–')) }} | {{ e.dauer | default('–') }} |
+  {% endfor %}
+  {% else %}
+  Für Ibbenbüren ist noch keine Einsatzhistorie gespeichert.
+  {% endif %}

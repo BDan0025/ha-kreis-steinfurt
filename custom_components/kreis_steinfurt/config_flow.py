@@ -10,7 +10,7 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     CONF_AREAS,
-    CONF_MAP_LOCATION_MODE,
+    CONF_KARTENPOSITION,
     CONF_RETENTION,
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
@@ -86,12 +86,12 @@ class KreisSteinfurtOptionsFlow(config_entries.OptionsFlow):
                     )
                 ),
                 vol.Required(
-                    CONF_MAP_LOCATION_MODE,
-                    default=options.get(CONF_MAP_LOCATION_MODE, MAP_LOCATION_AUTOMATIC),
+                    CONF_KARTENPOSITION,
+                    default=options.get(CONF_KARTENPOSITION, MAP_LOCATION_AUTOMATIC),
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=list(MAP_LOCATION_OPTIONS),
-                        translation_key="map_location_mode",
+                        translation_key="kartenposition",
                     )
                 ),
                 vol.Required(

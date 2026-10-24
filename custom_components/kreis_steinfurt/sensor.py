@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
@@ -19,6 +20,7 @@ from .models import Einsatz
 
 _MAX_LIST_ITEMS = 50
 _MAX_CITY_HISTORY_ITEMS = 25
+_COMPLETION_AGE_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
 def _laufende_einsaetze(einsaetze: list[Einsatz]) -> list[Einsatz]:
@@ -30,13 +32,14 @@ def _laufende_einsaetze(einsaetze: list[Einsatz]) -> list[Einsatz]:
     ]
 
 
-def _einsatz_attributes(einsatz: Einsatz, map_location_mode: str) -> dict[str, object]:
+def _einsatz_attributes(einsatz: Einsatz, kartenposition: str) -> dict[str, object]:
     """Return the public attributes for an individual incident."""
     duration_seconds = _duration_seconds(einsatz)
+    completion_age_seconds = _completion_age_seconds(einsatz)
     city_coordinates = CITY_COORDINATES.get(einsatz.ort)
     latitude = longitude = None
     location_source = "nicht verfügbar"
-    if map_location_mode != MAP_LOCATION_SOURCE and city_coordinates:
+    if kartenposition != MAP_LOCATION_SOURCE and city_coordinates:
         latitude, longitude = city_coordinates
         location_source = "stadtmittelpunkt"
     return {
@@ -54,6 +57,9 @@ def _einsatz_attributes(einsatz: Einsatz, map_location_mode: str) -> dict[str, o
         "erstmals_gesehen": _datetime_to_iso(einsatz.erstmals_gesehen),
         "letzte_aenderung": _datetime_to_iso(einsatz.letzte_aenderung),
         "abgeschlossen_am": _datetime_to_iso(einsatz.abgeschlossen_am),
+        "abgeschlossen_vor": _format_duration(completion_age_seconds)
+        if completion_age_seconds is not None
+        else None,
         "dauer_sekunden": duration_seconds,
         "dauer": _format_duration(duration_seconds),
     }
@@ -97,6 +103,19 @@ def _duration_seconds(einsatz: Einsatz) -> int:
     return max(0, int((end_naive - einsatz.beginn).total_seconds()))
 
 
+def _completion_age_seconds(einsatz: Einsatz) -> int | None:
+    """Return age since completion, rounded down to ten-minute steps."""
+    if einsatz.abgeschlossen_am is None:
+        return None
+    completed = dt_util.as_local(einsatz.abgeschlossen_am).replace(tzinfo=None)
+    elapsed = max(
+        0,
+        int((dt_util.now().replace(tzinfo=None) - completed).total_seconds()),
+    )
+    interval_seconds = int(_COMPLETION_AGE_UPDATE_INTERVAL.total_seconds())
+    return elapsed // interval_seconds * interval_seconds
+
+
 def _format_duration(seconds: int) -> str:
     """Format a duration for Home Assistant attributes."""
     hours, remainder = divmod(seconds, 3600)
@@ -123,6 +142,10 @@ async def async_setup_entry(
     known_incidents: set[str] = set()
     known_cities: set[str] = set()
     incident_entities: dict[str, KreisSteinfurtEinsatzSensor] = {}
+    letzter_einsatz_sensor = KreisSteinfurtLetzterEinsatzSensor(
+        coordinator,
+        entry.entry_id,
+    )
 
     def _is_monitored(einsatz: Einsatz) -> bool:
         """Return whether an incident matches the configured options."""
@@ -202,7 +225,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             KreisSteinfurtEinsaetzeSensor(coordinator, entry.entry_id),
-            KreisSteinfurtLetzterEinsatzSensor(coordinator, entry.entry_id),
+            letzter_einsatz_sensor,
             KreisSteinfurtLaufendeEinsaetzeSensor(coordinator, entry.entry_id),
             KreisSteinfurtLetzte24StundenSensor(coordinator, entry.entry_id),
             KreisSteinfurtHistorieSensor(coordinator, entry.entry_id),
@@ -220,6 +243,22 @@ async def async_setup_entry(
             async_add_entities(new_entities)
 
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
+
+    def _async_update_completion_ages(_now: datetime) -> None:
+        """Refresh completed incident entities without polling the source."""
+        if letzter_einsatz_sensor.has_completion_time:
+            letzter_einsatz_sensor.async_write_ha_state()
+        for entity in incident_entities.values():
+            if entity.has_completion_time:
+                entity.async_write_ha_state()
+
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass,
+            _async_update_completion_ages,
+            _COMPLETION_AGE_UPDATE_INTERVAL,
+        )
+    )
 
 
 class _KreisSteinfurtCoordinatorSensor(
@@ -307,6 +346,14 @@ class KreisSteinfurtLetzterEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
         return super().available and self._letzter_einsatz is not None
 
     @property
+    def has_completion_time(self) -> bool:
+        """Return whether the latest incident has a completion timestamp."""
+        return (
+            (einsatz := self._letzter_einsatz) is not None
+            and einsatz.abgeschlossen_am is not None
+        )
+
+    @property
     def native_value(self) -> str | None:
         """Return the status of the latest incident."""
         if (einsatz := self._letzter_einsatz) is None:
@@ -318,7 +365,7 @@ class KreisSteinfurtLetzterEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
         """Return complete details of the latest incident."""
         if (einsatz := self._letzter_einsatz) is None:
             return {}
-        return _einsatz_attributes(einsatz, self.coordinator.map_location_mode)
+        return _einsatz_attributes(einsatz, self.coordinator.kartenposition)
 
 
 class KreisSteinfurtLaufendeEinsaetzeSensor(_KreisSteinfurtCoordinatorSensor):
@@ -587,6 +634,14 @@ class KreisSteinfurtEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
         return super().available and self._einsatz is not None
 
     @property
+    def has_completion_time(self) -> bool:
+        """Return whether the ten-minute age update applies to this entity."""
+        return (
+            (einsatz := self._einsatz) is not None
+            and einsatz.abgeschlossen_am is not None
+        )
+
+    @property
     def native_value(self) -> str | None:
         """Return the published status."""
         if (einsatz := self._einsatz) is None:
@@ -598,4 +653,4 @@ class KreisSteinfurtEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
         """Return all data published for this incident."""
         if (einsatz := self._einsatz) is None:
             return {"einsatznummer": self._einsatznr}
-        return _einsatz_attributes(einsatz, self.coordinator.map_location_mode)
+        return _einsatz_attributes(einsatz, self.coordinator.kartenposition)

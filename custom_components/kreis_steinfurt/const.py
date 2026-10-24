@@ -6,7 +6,7 @@ NAME = "Kreis Steinfurt Einsätze"
 
 CONF_AREAS = "areas"
 CONF_INCIDENT_TYPES = "incident_types"
-CONF_MAP_LOCATION_MODE = "map_location_mode"
+CONF_KARTENPOSITION = "kartenposition"
 CONF_RETENTION = "retention"
 CONF_SCAN_INTERVAL = "scan_interval"
 

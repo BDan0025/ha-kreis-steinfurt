@@ -1,0 +1,20 @@
+# Einzelkarte: Letzter Einsatz einer Stadt. Für eine andere Stadt Titel und Entity-ID anpassen.
+type: markdown
+title: Ibbenbüren – letzter Einsatz
+content: |-
+  {% set historie = state_attr('sensor.kreis_steinfurt_einsatze_ibbenburen', 'historie') or [] %}
+  {% set letzter = historie | sort(attribute='beginn', reverse=true) | first %}
+  {% if letzter %}
+  **Einsatznummer:** {{ letzter.einsatznummer | default('–') }}<br>
+  **Einsatzart:** {{ letzter.einsatzart | default(letzter.sachverhalt | default('–')) }}<br>
+  **Beginn:** {{ letzter.beginn | default(letzter.zeit | default('–')) }}<br>
+  **Zustand:** {{ letzter.status | default(letzter.zustand | default('–')) }}<br>
+  {% if letzter.abgeschlossen_am %}
+  **Abgeschlossen am:** {{ as_local(as_datetime(letzter.abgeschlossen_am)).strftime('%d.%m.%Y %H:%M') }}<br>
+  **Einsatzdauer:** {{ letzter.dauer | default('–') }}
+  {% else %}
+  **Laufzeit bis jetzt:** {{ letzter.dauer | default('wird ermittelt') }}
+  {% endif %}
+  {% else %}
+  Für Ibbenbüren ist noch kein Einsatz gespeichert.
+  {% endif %}

@@ -10,18 +10,18 @@
     "step": {
       "init": {
         "title": "Überwachung einstellen",
-        "description": "Lege Abrufintervall, überwachte Kommunen und die Aufbewahrungsdauer einzelner Einsatz-Entities fest.",
+        "description": "Lege Abrufintervall, überwachte Kommunen und die Aufbewahrungsdauer einzelner Einsatz-Entities fest. Kartenposition: Die Quelle liefert aktuell keine Koordinaten. Mit Stadtmittelpunkt wird daher nur eine grobe Ortsposition angezeigt.",
         "data": {
           "scan_interval": "Abrufintervall in Sekunden (60 bis 3600)",
           "retention": "Einsatz-Entities löschen nach",
-          "map_location_mode": "Kartenposition für Einsätze",
+          "kartenposition": "Kartenposition für Einsätze",
           "areas": "Überwachte Kommunen"
         }
       }
     }
   },
   "selector": {
-    "map_location_mode": {
+    "kartenposition": {
       "options": {
         "automatic": "Automatisch (aktuell Stadtmittelpunkt)",
         "city": "Immer Stadtmittelpunkt",
