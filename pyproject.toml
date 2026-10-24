@@ -1,6 +1,6 @@
 [project]
 name = "ha-kreis-steinfurt"
-version = "0.5.0"
+version = "0.5.1"
 description = "Home Assistant integration for Kreis Steinfurt emergency incidents"
 requires-python = ">=3.12"
 dependencies = []

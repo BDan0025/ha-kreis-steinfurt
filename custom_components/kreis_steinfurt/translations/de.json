@@ -16,10 +16,16 @@
           "retention": "Einsatz-Entities löschen nach",
           "kartenposition": "Kartenposition für Einsätze",
           "areas": "Überwachte Kommunen",
-          "enable_incident_entities": "Einzelne Einsatz-Entities erstellen",
-          "enable_city_summaries": "Ortsübersichten erstellen",
-          "enable_city_last_incident": "Letzten Einsatz je Ort erstellen",
-          "include_list_attributes": "Einsatzlisten in Attributen bereitstellen"
+          "enable_incident_entities": "Für jeden Einsatz eine eigene Entität anlegen",
+          "enable_city_summaries": "Übersicht für jeden ausgewählten Ort anlegen",
+          "enable_city_last_incident": "Letzten Einsatz für jeden ausgewählten Ort anzeigen",
+          "include_list_attributes": "Listen mit Einsatzdetails in den Attributen speichern"
+        },
+        "data_description": {
+          "enable_incident_entities": "Erstellt für jede Einsatznummer eine eigene Entität. Sie bleibt bis zum Ablauf der Aufbewahrungsdauer erhalten.",
+          "enable_city_summaries": "Erstellt je ausgewähltem Ort eine Entität mit aktuellen Einsätzen, laufenden Alarmen sowie Tages- und Wochenzähler.",
+          "enable_city_last_incident": "Erstellt je ausgewähltem Ort eine feste Entität. Ihr Wert zeigt die Zeit seit Abschluss oder bei einem laufenden Einsatz dessen Laufzeit im Format HH:MM.",
+          "include_list_attributes": "Stellt Einsatzlisten für Dashboard-Karten bereit. Ausschalten spart Datenbankplatz, Listen-Karten können dann aber keine Einträge anzeigen."
         }
       }
     }

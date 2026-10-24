@@ -208,8 +208,8 @@ async def async_setup_entry(
             if _is_monitored(einsatz)
         }
         city_unique_ids = {
-            f"{DOMAIN}_einsatzort_{slugify(einsatz.ort)}_{entry.entry_id}"
-            for einsatz in coordinator.monitored_areas
+            f"{DOMAIN}_einsatzort_{slugify(city)}_{entry.entry_id}"
+            for city in coordinator.monitored_areas
         }
         city_last_incident_unique_ids = {
             f"{DOMAIN}_letzter_einsatzort_{slugify(city)}_{entry.entry_id}"

@@ -1,133 +1,71 @@
-# Kreis Steinfurt Einsätze für Home Assistant
+# Kreis Steinfurt Einsätze
 
-Diese Custom Integration liest die öffentlich verfügbare Liste der
-[aktuellen Einsätze](https://www.kreis-steinfurt.de/kv_steinfurt/Kreisverwaltung/%C3%84mter/Amt%20f%C3%BCr%20Bev%C3%B6lkerungsschutz/Kreisleitstelle/Aktuelle%20Eins%C3%A4tze/)
-der Feuerwehren im Kreis Steinfurt aus.
+Home-Assistant-Integration für die öffentlich veröffentlichte Liste der [aktuellen Einsätze des Kreises Steinfurt](https://www.kreis-steinfurt.de/kv_steinfurt/Kreisverwaltung/%C3%84mter/Amt%20f%C3%BCr%20Bev%C3%B6lkerungsschutz/Kreisleitstelle/Aktuelle%20Eins%C3%A4tze/).
 
-Die Quelle enthält Einsätze der letzten 48 Stunden. Sie wird standardmäßig alle
-60 Sekunden aktualisiert.
+> **Aktuelle Version: 0.5.1** · Die Daten stammen ausschließlich aus der öffentlichen Quelle und können unvollständig, verspätet oder fehlerhaft sein.
 
-## Installation
+## Das bietet die Integration
 
-1. Den Ordner `custom_components/kreis_steinfurt` nach
-   `<Home-Assistant-Konfiguration>/custom_components/kreis_steinfurt` kopieren.
+| Bereich | Funktion |
+| --- | --- |
+| Übersicht | Einsätze, laufende Alarme, heute, letzte 24 Stunden und letzte 7 Tage |
+| Orte | frei auswählbare Kommunen mit eigener Ortsübersicht |
+| Letzter Einsatz | eine feste Entität je ausgewähltem Ort, inklusive Zeit seit Abschluss |
+| Historie | lokale Speicherung für 48 Stunden, 7 Tage, 1 Monat oder dauerhaft |
+| Dashboard | einzeln nutzbare Lovelace-Karten für Übersicht, Orte, Historie und Details |
+| Datenumfang | begrenzte Listenattribute und abschaltbare Zusatz-Entities |
+
+## Schnellstart
+
+1. Den Ordner `custom_components/kreis_steinfurt` nach `<Home-Assistant-Konfiguration>/custom_components/kreis_steinfurt` kopieren.
 2. Home Assistant neu starten.
-3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen** nach
-   **Kreis Steinfurt Einsätze** suchen und einrichten.
+3. Unter **Einstellungen → Geräte & Dienste → Integration hinzufügen** nach **Kreis Steinfurt Einsätze** suchen und einrichten.
+4. Unter **Konfigurieren** die gewünschten Orte auswählen.
+5. Eine Karte aus [`examples`](examples/) als **Manuelle Karte** in ein Dashboard einfügen.
 
-## Sensor
+## Dokumentation
 
-Die Integration erstellt diese Übersichten:
+| Thema | Inhalt |
+| --- | --- |
+| [Entitäten](docs/ENTITAETEN.md) | Alle Übersicht-, Orts- und Einsatz-Entities mit Attributen |
+| [Einstellungen](docs/EINSTELLUNGEN.md) | Abrufintervall, Aufbewahrung, Orte, Kartenposition und Schalter |
+| [Dashboard-Beispiele](docs/DASHBOARD.md) | Jede Lovelace-Karte einzeln erklärt |
+| [Bilder & Screenshots](docs/images/README.md) | Bereich für Screenshots der Dashboard-Beispiele |
+| [Änderungen](docs/CHANGELOG.md) | Funktionsstände und Versionsverlauf |
 
-- `sensor.kreis_steinfurt_einsaetze` – Anzahl aller veröffentlichten Einsätze
-  der letzten 48 Stunden
-- `sensor.kreis_steinfurt_laufende_einsatze` – Anzahl der Einträge, die nicht
-  als `abgeschlossen` markiert sind
-- `sensor.kreis_steinfurt_einsatze_letzte_24_stunden` – Anzahl seit den
-  vergangenen 24 Stunden
-- `sensor.kreis_steinfurt_einsatzhistorie` – Anzahl der gespeicherten Einsätze
-  innerhalb der gewählten Aufbewahrungsdauer
-- `sensor.kreis_steinfurt_einsatze_heute` – Gesamtzahl seit Tagesbeginn
-- `sensor.kreis_steinfurt_einsatze_letzte_7_tage` – Gesamtzahl der letzten
-  sieben Tage
-- `sensor.kreis_steinfurt_einsatzarten` – bekannte Einsatzarten mit Zählern in
-  den Attributen
-- `sensor.kreis_steinfurt_letzter_einsatz` – vollständige Details des jeweils
-  zuletzt veröffentlichten Einsatzes
+## Wichtige Entitäten
 
-Zusätzlich entstehen – sofern in den Einstellungen aktiviert – dynamisch
-Sensoren für jeden Einsatz sowie feste Übersichten für jede ausgewählte Stadt.
-Für jede überwachte Stadt erstellt die Integration außerdem eine Entität wie
-`sensor.kreis_steinfurt_letzter_einsatz_ibbenburen`. Ihr Zustand ist die Zeit
-seit Abschluss im Format `HH:MM` (bei einem laufenden Einsatz dessen bisherige
-Laufzeit); die Detailattribute enthalten Einsatznummer, Art, Beginn, Abschluss,
-Dauer und Status. Ohne gespeicherten Einsatz hat die Entität den Zustand
-`unbekannt`. Ein Einsatzsensor hat den Status als Zustand und die
-Attribute `einsatznummer`, `einsatzart`, `ort`, `beginn`, `status`, `strasse`,
-  `sachverhalt`, `latitude`, `longitude` und `kartenposition`. Straße und
-Sachverhalt sind `null`, solange die öffentliche Quelle diese Angaben nicht
-veröffentlicht. Koordinaten können wahlweise als Stadtmittelpunkt ergänzt werden.
-Zusätzlich sind `erstmals_gesehen`, `letzte_aenderung`, `abgeschlossen_am`,
-`abgeschlossen_vor`, `dauer_sekunden` und `dauer` vorhanden. `dauer` ist bei
-laufenden Einsätzen die Laufzeit bis jetzt, bei abgeschlossenen Einsätzen die
-Zeit zwischen Beginn und Abschluss. `abgeschlossen_vor` wird nur für
-abgeschlossene Einsätze ausgegeben und aktualisiert sich im 10-Minuten-Takt,
-ohne einen weiteren Abruf der Quelle auszulösen. Die dynamische Entity wird
-nach Ablauf der ausgewählten Aufbewahrung entfernt; die Einsatzhistorie enthält den
-kompletten Verlauf bis zu diesem Zeitpunkt. Bis zur Löschung behält sie ihren
-letzten bekannten Zustand und wechselt nicht zwischen Status und
-„Nicht verfügbar“.
+| Entität | Bedeutung |
+| --- | --- |
+| `sensor.kreis_steinfurt_einsaetze` | Alle aktuell von der Quelle veröffentlichten Einsätze |
+| `sensor.kreis_steinfurt_laufende_einsatze` | Einsätze, deren Status nicht `abgeschlossen` ist |
+| `sensor.kreis_steinfurt_letzter_einsatz` | Details zum neuesten Einsatz im gesamten ausgewählten Gebiet |
+| `sensor.kreis_steinfurt_einsatzhistorie` | Anzahl der lokal gespeicherten Einsätze |
+| `sensor.kreis_steinfurt_einsatze_heute` | Einsätze seit Tagesbeginn |
+| `sensor.kreis_steinfurt_einsatze_letzte_7_tage` | Einsätze der vergangenen sieben Tage |
+| `sensor.kreis_steinfurt_abrufintervall` | Eingestelltes Abrufintervall in Sekunden |
+| `sensor.kreis_steinfurt_einsatze_ibbenburen` | Ortsübersicht, hier als Beispiel Ibbenbüren |
+| `sensor.kreis_steinfurt_letzter_einsatz_ibbenburen` | Letzter gespeicherter Einsatz in Ibbenbüren |
+
+Die Orts-Entitäten entstehen für **jeden ausgewählten Ort**, selbst wenn dort noch kein Einsatz gespeichert ist. Für andere Orte wird der Ortsname in der Entity-ID entsprechend ersetzt, zum Beispiel `..._emsdetten` oder `..._rheine`.
 
 ## Dashboard-Beispiele
 
-Jede Vorlage kann einzeln als **Manuelle Karte** in ein Home-Assistant-Dashboard
-eingefügt werden. Die Beispiele verwenden die Entity-IDs dieser Integration:
+Alle Vorlagen liegen im Ordner [`examples`](examples/) und sind unabhängig voneinander nutzbar. Besonders hilfreich für den Einstieg sind:
 
-- [`lovelace_overview.yaml`](examples/lovelace_overview.yaml) – kompakte Übersicht
-- [`lovelace_ibbenbueren.yaml`](examples/lovelace_ibbenbueren.yaml) – aktuelle Einsätze in Ibbenbüren
-- [`lovelace_city_overview.yaml`](examples/lovelace_city_overview.yaml) – Stadtübersicht mit aktuell, laufend, heute und letzte 7 Tage
-- [`lovelace_city_last_incident.yaml`](examples/lovelace_city_last_incident.yaml) – letzter Einsatz einer Stadt mit Dauer
-- [`lovelace_city_history.yaml`](examples/lovelace_city_history.yaml) – gespeicherte Einsatzhistorie einer Stadt
-- [`lovelace_last_incident_card.yaml`](examples/lovelace_last_incident_card.yaml) – letzter Einsatz mit Dauer
-- [`lovelace_incident_detail.yaml`](examples/lovelace_incident_detail.yaml) – automatisch wechselnde Details des letzten Einsatzes
-- [`lovelace_latest_incident_map.yaml`](examples/lovelace_latest_incident_map.yaml) – Karte des letzten Einsatzes
-- [`lovelace_alarm_status.yaml`](examples/lovelace_alarm_status.yaml) – aktive und abgeschlossene Alarme
-- [`lovelace_statistics.yaml`](examples/lovelace_statistics.yaml) – heute und letzte 7 Tage
-- [`lovelace_incident_types.yaml`](examples/lovelace_incident_types.yaml) – Auswertung nach Einsatzarten
-- [`lovelace_active_alarms.yaml`](examples/lovelace_active_alarms.yaml) – Liste aktiver Alarme
-- [`lovelace_history.yaml`](examples/lovelace_history.yaml) – Einsatzhistorie
+- [Kompakte Übersicht](examples/lovelace_overview.yaml)
+- [Letzter Einsatz einer Stadt](examples/lovelace_city_last_incident.yaml)
+- [Ortsübersicht](examples/lovelace_city_overview.yaml)
+- [Aktive Alarme](examples/lovelace_active_alarms.yaml)
+- [Einsatzhistorie](examples/lovelace_history.yaml)
 
-Für eine andere Stadt in den Ortskarten Titel und Entity-IDs entsprechend
-anpassen. Als Vorlage dient Ibbenbüren, zum Beispiel
-`sensor.kreis_steinfurt_einsatze_ibbenburen`.
+Die vollständige Liste samt Voraussetzungen und Anpassung auf einen anderen Ort steht in der [Dashboard-Dokumentation](docs/DASHBOARD.md).
 
-Die bisherigen kombinierten Vorlagen
-[`lovelace_cards.yaml`](examples/lovelace_cards.yaml) und
-[`lovelace_incident_lists.yaml`](examples/lovelace_incident_lists.yaml) bleiben
-als Gesamtbeispiele erhalten. Die Listen-Attribute sind zum Schutz der
-Home-Assistant-Datenbank auf die 50 neuesten Einträge begrenzt.
-Die zusätzliche Historie eines Ortssensors ist auf 25 Einträge begrenzt.
+## Hinweise zur Datenquelle
 
-Die Angaben stammen ausschließlich von der veröffentlichten Liste des Kreises
-Steinfurt und können sich jederzeit ändern.
+Die Quelle veröffentlicht Einsätze der letzten rund 48 Stunden. Straße, Sachverhalt und genaue Koordinaten sind nicht immer verfügbar. Als optionale Kartenposition kann deshalb ein Stadtmittelpunkt verwendet werden; das ist nur eine grobe Ortsangabe, niemals eine Einsatzadresse.
 
-## Einstellungen
-
-Unter **Einstellungen → Geräte & Dienste → Kreis Steinfurt Einsätze →
-Konfigurieren** lassen sich das Abrufintervall (60 bis 3600 Sekunden) sowie die
-überwachten Kommunen per Mehrfachauswahl festlegen.
-Die Übersichtssensoren sowie Einsatz- und Ortssensoren berücksichtigen nur diese
-Auswahl.
-
-Unter **Zusatz-Entities & Datenumfang** lassen sich vier optionale Bestandteile
-einzeln abschalten: einzelne Einsatz-Entities, Ortsübersichten, „letzter Einsatz“
-je Ort sowie die kompakten Einsatzlisten in den Attributen. Die Schalter sind
-standardmäßig aktiviert und erhalten damit das bisherige Verhalten. Werden
-Listen abgeschaltet, bleiben Zähler und Detailattribute verfügbar, aber Karten,
-die `einsatze` oder `historie` aus Attributen lesen, benötigen diese Listen nicht
-mehr bzw. zeigen keine Einträge an.
-
-`sensor.kreis_steinfurt_abrufintervall` zeigt den aktuell verwendeten Wert in
-Sekunden an.
-
-Für die Kartenposition einzelner Einsatz-Entities kann gewählt werden, ob nur
-Koordinaten der Quelle verwendet werden, immer der Stadtmittelpunkt angezeigt
-wird oder automatisch auf den Stadtmittelpunkt zurückgefallen wird. Da die
-Quelle aktuell keine Koordinaten veröffentlicht, liefert „automatisch“ derzeit
-den Stadtmittelpunkt; „nur Quelle“ erzeugt aktuell keine Position. Die
-Stadtmittelpunkte dienen ausschließlich zur groben Ortsdarstellung.
-
-Die Einsatzarten werden aus den veröffentlichten Daten automatisch erkannt und
-über `sensor.kreis_steinfurt_einsatzarten` mitsamt ihren Zählern bereitgestellt.
-
-Für einzelne Einsatz-Entities kann eine Aufbewahrung von 48 Stunden, 7 Tagen,
-einem Monat oder dauerhaft gewählt werden. Die Integration speichert dafür die
-zuletzt veröffentlichten Einsatzdetails lokal in Home Assistant und entfernt die
-Entity nach Ablauf der gewählten Zeit.
-
-Die Sensoren „heute“ und „letzte 7 Tage“ verwenden diese gespeicherte Historie.
-Für eine vollständige 7-Tage-Statistik muss die Aufbewahrung deshalb mindestens
-auf 7 Tage, 1 Monat oder „Nie“ eingestellt sein.
+Die Detail- und Listenattribute sind bewusst begrenzt, damit die Home-Assistant-Datenbank klein bleibt. Mehr dazu steht bei den [Einstellungen](docs/EINSTELLUNGEN.md).
 
 ## Entwicklung
 
