@@ -32,12 +32,15 @@ Die Integration erstellt diese Übersichten:
   sieben Tage
 - `sensor.kreis_steinfurt_einsatzarten` – bekannte Einsatzarten mit Zählern in
   den Attributen
+- `sensor.kreis_steinfurt_letzter_einsatz` – vollständige Details des jeweils
+  zuletzt veröffentlichten Einsatzes
 
 Zusätzlich entstehen dynamisch Sensoren für jeden Einsatz sowie jede in der
 Liste vorkommende Stadt. Ein Einsatzsensor hat den Status als Zustand und die
 Attribute `einsatznummer`, `einsatzart`, `ort`, `beginn`, `status`, `strasse`,
-`sachverhalt`, `latitude` und `longitude`. Straße, Sachverhalt und Koordinaten
-sind `null`, solange die öffentliche Quelle diese Angaben nicht veröffentlicht.
+  `sachverhalt`, `latitude`, `longitude` und `kartenposition`. Straße und
+Sachverhalt sind `null`, solange die öffentliche Quelle diese Angaben nicht
+veröffentlicht. Koordinaten können wahlweise als Stadtmittelpunkt ergänzt werden.
 Zusätzlich sind `erstmals_gesehen`, `letzte_aenderung`, `abgeschlossen_am`,
 `dauer_sekunden` und `dauer` vorhanden. Die dynamische Entity wird nach Ablauf
 der ausgewählten Aufbewahrung entfernt; die Einsatzhistorie enthält den
@@ -45,47 +48,34 @@ kompletten Verlauf bis zu diesem Zeitpunkt. Bis zur Löschung behält sie ihren
 letzten bekannten Zustand und wechselt nicht zwischen Status und
 „Nicht verfügbar“.
 
-## Dashboard-Beispiel
+## Dashboard-Beispiele
 
-Eine fertige Lovelace-Vorlage mit Übersicht und einer Einsatzliste für
-Ibbenbüren liegt in [`examples/lovelace_cards.yaml`](examples/lovelace_cards.yaml).
-Den YAML-Inhalt als **Manuelle Karte** in einem Home-Assistant-Dashboard
-einfügen. Für eine andere Stadt in der Markdown-Karte sowohl den Titel als auch
-die Entity-ID `sensor.kreis_steinfurt_einsaetze_ibbenbueren` anpassen.
+Jede Vorlage kann einzeln als **Manuelle Karte** in ein Home-Assistant-Dashboard
+eingefügt werden. Die Beispiele verwenden die Entity-IDs dieser Integration:
 
-Die Karte [`examples/lovelace_last_incident_card.yaml`](examples/lovelace_last_incident_card.yaml)
-zeigt den neuesten Einsatz mit Beginn, bisheriger Dauer sowie Zählern für aktive
-und abgeschlossene Einsätze im ausgewählten Überwachungsgebiet.
+- [`lovelace_overview.yaml`](examples/lovelace_overview.yaml) – kompakte Übersicht
+- [`lovelace_ibbenbueren.yaml`](examples/lovelace_ibbenbueren.yaml) – aktuelle Einsätze in Ibbenbüren
+- [`lovelace_last_incident_card.yaml`](examples/lovelace_last_incident_card.yaml) – letzter Einsatz mit Dauer
+- [`lovelace_incident_detail.yaml`](examples/lovelace_incident_detail.yaml) – automatisch wechselnde Details des letzten Einsatzes
+- [`lovelace_latest_incident_map.yaml`](examples/lovelace_latest_incident_map.yaml) – Karte des letzten Einsatzes
+- [`lovelace_alarm_status.yaml`](examples/lovelace_alarm_status.yaml) – aktive und abgeschlossene Alarme
+- [`lovelace_statistics.yaml`](examples/lovelace_statistics.yaml) – heute und letzte 7 Tage
+- [`lovelace_incident_types.yaml`](examples/lovelace_incident_types.yaml) – Verteilung nach Einsatzarten (ApexCharts Card)
+- [`lovelace_active_alarms.yaml`](examples/lovelace_active_alarms.yaml) – Liste aktiver Alarme
+- [`lovelace_history.yaml`](examples/lovelace_history.yaml) – Einsatzhistorie
 
-[`examples/lovelace_incident_lists.yaml`](examples/lovelace_incident_lists.yaml)
-enthält eine fertige Karte mit Statistik, einer Liste laufender Einsätze und
-einer Historienliste. Die Listen-Attribute sind zum Schutz der Home-Assistant-
-Datenbank auf die 50 neuesten Einträge begrenzt; Statistiken und einzelne
-Einsatz-Entities berücksichtigen weiterhin die gesamte Aufbewahrungszeit. Die
-zusätzliche Historie eines Ortssensors ist auf 25 Einträge begrenzt.
+Für eine andere Stadt in der Ortskarte Titel und Entity-ID
+`sensor.kreis_steinfurt_einsatze_ibbenburen` entsprechend anpassen.
+
+Die bisherigen kombinierten Vorlagen
+[`lovelace_cards.yaml`](examples/lovelace_cards.yaml) und
+[`lovelace_incident_lists.yaml`](examples/lovelace_incident_lists.yaml) bleiben
+als Gesamtbeispiele erhalten. Die Listen-Attribute sind zum Schutz der
+Home-Assistant-Datenbank auf die 50 neuesten Einträge begrenzt.
+Die zusätzliche Historie eines Ortssensors ist auf 25 Einträge begrenzt.
 
 Die Angaben stammen ausschließlich von der veröffentlichten Liste des Kreises
 Steinfurt und können sich jederzeit ändern.
-
-## Versionierung
-
-Diese Integration verwendet das Schema `X.Y.Z`:
-
-| Stelle | Bedeutung | Erhöhung bei |
-| --- | --- | --- |
-| `X` | Hauptversion | grundlegenden Umbauten oder Architekturänderungen |
-| `Y` | Funktionsversion | neuen Funktionen, Entitäten oder Berechnungen |
-| `Z` | Korrekturversion | Fehlerbehebungen und Verbesserungen ohne neue Funktion |
-
-Eine neue Version muss zunächst erfolgreich in Home Assistant eingerichtet und
-gelaufen sein. Fehler, die beim erstmaligen Einrichten einer neuen Version
-auftreten, werden noch unter derselben Versionsnummer korrigiert. Erst danach
-wird für eine nachträgliche reine Fehlerkorrektur `Z` erhöht. Bei einer neuen
-Funktionsversion wird `Z` wieder auf `0` gesetzt.
-
-Der vorbereitete Stand mit Einstellungsseite, Gebietsfilter und
-Aufbewahrungszeit, Historie und Statistik ist **0.2.0**. Er muss erst
-erfolgreich laufen, bevor eine Korrekturversion wie `0.2.1` vergeben wird.
 
 ## Einstellungen
 
@@ -97,6 +87,13 @@ Auswahl.
 
 `sensor.kreis_steinfurt_abrufintervall` zeigt den aktuell verwendeten Wert in
 Sekunden an.
+
+Für die Kartenposition einzelner Einsatz-Entities kann gewählt werden, ob nur
+Koordinaten der Quelle verwendet werden, immer der Stadtmittelpunkt angezeigt
+wird oder automatisch auf den Stadtmittelpunkt zurückgefallen wird. Da die
+Quelle aktuell keine Koordinaten veröffentlicht, liefert „automatisch“ derzeit
+den Stadtmittelpunkt; „nur Quelle“ erzeugt aktuell keine Position. Die
+Stadtmittelpunkte dienen ausschließlich zur groben Ortsdarstellung.
 
 Die Einsatzarten werden aus den veröffentlichten Daten automatisch erkannt und
 über `sensor.kreis_steinfurt_einsatzarten` mitsamt ihren Zählern bereitgestellt.

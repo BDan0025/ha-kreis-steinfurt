@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
 
-from .const import DOMAIN
+from .const import CITY_COORDINATES, DOMAIN, MAP_LOCATION_SOURCE
 from .coordinator import KreisSteinfurtCoordinator
 from .models import Einsatz
 
@@ -30,9 +30,15 @@ def _laufende_einsaetze(einsaetze: list[Einsatz]) -> list[Einsatz]:
     ]
 
 
-def _einsatz_attributes(einsatz: Einsatz) -> dict[str, object]:
+def _einsatz_attributes(einsatz: Einsatz, map_location_mode: str) -> dict[str, object]:
     """Return the public attributes for an individual incident."""
     duration_seconds = _duration_seconds(einsatz)
+    city_coordinates = CITY_COORDINATES.get(einsatz.ort)
+    latitude = longitude = None
+    location_source = "nicht verfügbar"
+    if map_location_mode != MAP_LOCATION_SOURCE and city_coordinates:
+        latitude, longitude = city_coordinates
+        location_source = "stadtmittelpunkt"
     return {
         "einsatznummer": einsatz.einsatznr,
         "einsatzart": einsatz.einsatzart,
@@ -42,8 +48,9 @@ def _einsatz_attributes(einsatz: Einsatz) -> dict[str, object]:
         "status": einsatz.zustand,
         "strasse": einsatz.strasse,
         "sachverhalt": einsatz.sachverhalt,
-        "latitude": None,
-        "longitude": None,
+        "latitude": latitude,
+        "longitude": longitude,
+        "kartenposition": location_source,
         "erstmals_gesehen": _datetime_to_iso(einsatz.erstmals_gesehen),
         "letzte_aenderung": _datetime_to_iso(einsatz.letzte_aenderung),
         "abgeschlossen_am": _datetime_to_iso(einsatz.abgeschlossen_am),
@@ -195,6 +202,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             KreisSteinfurtEinsaetzeSensor(coordinator, entry.entry_id),
+            KreisSteinfurtLetzterEinsatzSensor(coordinator, entry.entry_id),
             KreisSteinfurtLaufendeEinsaetzeSensor(coordinator, entry.entry_id),
             KreisSteinfurtLetzte24StundenSensor(coordinator, entry.entry_id),
             KreisSteinfurtHistorieSensor(coordinator, entry.entry_id),
@@ -275,6 +283,42 @@ class KreisSteinfurtEinsaetzeSensor(_KreisSteinfurtCoordinatorSensor):
             "orte": sorted({einsatz.ort for einsatz in self._einsaetze}),
             "einsaetze": _compact_list(self._einsaetze),
         }
+
+
+class KreisSteinfurtLetzterEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
+    """Expose the newest incident through one stable entity ID."""
+
+    _attr_name = "Kreis Steinfurt letzter Einsatz"
+    _attr_suggested_object_id = "kreis_steinfurt_letzter_einsatz"
+
+    def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
+        """Initialize the latest-incident detail sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_letzter_einsatz_{entry_id}"
+
+    @property
+    def _letzter_einsatz(self) -> Einsatz | None:
+        """Return the latest incident from the current source data."""
+        return max(self._einsaetze, key=lambda einsatz: einsatz.beginn, default=None)
+
+    @property
+    def available(self) -> bool:
+        """Make the entity unavailable when no incident is currently published."""
+        return super().available and self._letzter_einsatz is not None
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the status of the latest incident."""
+        if (einsatz := self._letzter_einsatz) is None:
+            return None
+        return einsatz.zustand
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        """Return complete details of the latest incident."""
+        if (einsatz := self._letzter_einsatz) is None:
+            return {}
+        return _einsatz_attributes(einsatz, self.coordinator.map_location_mode)
 
 
 class KreisSteinfurtLaufendeEinsaetzeSensor(_KreisSteinfurtCoordinatorSensor):
@@ -550,8 +594,8 @@ class KreisSteinfurtEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
         return einsatz.zustand
 
     @property
-    def extra_state_attributes(self) -> dict[str, str | None]:
+    def extra_state_attributes(self) -> dict[str, object]:
         """Return all data published for this incident."""
         if (einsatz := self._einsatz) is None:
             return {"einsatznummer": self._einsatznr}
-        return _einsatz_attributes(einsatz)
+        return _einsatz_attributes(einsatz, self.coordinator.map_location_mode)

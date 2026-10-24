@@ -1,27 +1,15 @@
 # Letzter Einsatz und Alarmzähler für die in der Integration ausgewählten Kommunen.
 type: markdown
-title: Kreis Steinfurt – Einsatzlage
+title: Letzter Einsatz im Kreis Steinfurt
 content: |
-  {% set einsaetze = state_attr('sensor.kreis_steinfurt_einsaetze', 'einsaetze') or [] %}
-  {% set aktive = einsaetze | rejectattr('status', 'eq', 'abgeschlossen') | list %}
-  {% set abgeschlossene = einsaetze | selectattr('status', 'eq', 'abgeschlossen') | list %}
-
-  | Aktive Alarme | Abgeschlossen |
-  | :---: | :---: |
-  | **{{ aktive | count }}** | **{{ abgeschlossene | count }}** |
-
-  {% if einsaetze | count > 0 %}
-  {% set letzter = einsaetze | sort(attribute='beginn_iso', reverse=true) | first %}
-  ## Letzter Einsatz
-
-  | Feld | Wert |
-  | :--- | :--- |
-  | Einsatznummer | {{ letzter.einsatznummer }} |
-  | Einsatzart | **{{ letzter.einsatzart }}** |
-  | Ort | {{ letzter.ort }} |
-  | Beginn | {{ letzter.beginn }} |
-  | Dauer seit Beginn | {% set sekunden = (as_timestamp(now()) - as_timestamp(letzter.beginn_iso)) | int(0) %}{{ sekunden // 3600 }} Std. {{ (sekunden % 3600) // 60 }} Min. |
-  | Zustand | *{{ letzter.status }}* |
+  {% set entity = 'sensor.kreis_steinfurt_letzter_einsatz' %}
+  {% if states(entity) not in ['unknown', 'unavailable'] %}
+  **Einsatznummer:** {{ state_attr(entity, 'einsatznummer') | default('–') }}<br>
+  **Einsatzart:** {{ state_attr(entity, 'einsatzart') | default('–') }}<br>
+  **Ort:** {{ state_attr(entity, 'ort') | default('–') }}<br>
+  **Beginn:** {{ state_attr(entity, 'beginn') | default('–') }}<br>
+  **Zustand:** {{ states(entity) }}<br>
+  **Dauer:** {{ state_attr(entity, 'dauer') | default('wird ermittelt') }}
   {% else %}
   Aktuell liegen für das ausgewählte Gebiet keine Einsätze vor.
   {% endif %}

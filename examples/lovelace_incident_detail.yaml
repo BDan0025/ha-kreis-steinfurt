@@ -1,0 +1,32 @@
+# Detailansicht des zuletzt veröffentlichten Einsatzes. Diese Entity-ID bleibt
+# immer gleich und wechselt automatisch auf den jeweils neuesten Einsatz.
+type: entities
+title: Einsatzdetails
+show_header_toggle: false
+entities:
+  - entity: sensor.kreis_steinfurt_letzter_einsatz
+    name: Einsatzstatus
+  - type: attribute
+    entity: sensor.kreis_steinfurt_letzter_einsatz
+    attribute: einsatznummer
+    name: Einsatznummer
+  - type: attribute
+    entity: sensor.kreis_steinfurt_letzter_einsatz
+    attribute: einsatzart
+    name: Einsatzart
+  - type: attribute
+    entity: sensor.kreis_steinfurt_letzter_einsatz
+    attribute: ort
+    name: Ort
+  - type: attribute
+    entity: sensor.kreis_steinfurt_letzter_einsatz
+    attribute: beginn
+    name: Beginn
+  - type: attribute
+    entity: sensor.kreis_steinfurt_letzter_einsatz
+    attribute: dauer
+    name: Dauer
+  - type: attribute
+    entity: sensor.kreis_steinfurt_letzter_einsatz
+    attribute: kartenposition
+    name: Kartenposition

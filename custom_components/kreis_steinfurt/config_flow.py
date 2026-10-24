@@ -10,11 +10,14 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     CONF_AREAS,
+    CONF_MAP_LOCATION_MODE,
     CONF_RETENTION,
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     KREIS_STEINFURT_AREAS,
+    MAP_LOCATION_AUTOMATIC,
+    MAP_LOCATION_OPTIONS,
     MAX_SCAN_INTERVAL,
     MIN_SCAN_INTERVAL,
     NAME,
@@ -80,6 +83,15 @@ class KreisSteinfurtOptionsFlow(config_entries.OptionsFlow):
                     SelectSelectorConfig(
                         options=list(RETENTION_OPTIONS),
                         translation_key="retention",
+                    )
+                ),
+                vol.Required(
+                    CONF_MAP_LOCATION_MODE,
+                    default=options.get(CONF_MAP_LOCATION_MODE, MAP_LOCATION_AUTOMATIC),
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=list(MAP_LOCATION_OPTIONS),
+                        translation_key="map_location_mode",
                     )
                 ),
                 vol.Required(

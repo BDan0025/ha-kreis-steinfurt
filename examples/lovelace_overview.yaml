@@ -1,0 +1,11 @@
+# Einzelkarte: Kompakte Übersicht der überwachten Einsätze.
+type: entities
+title: Kreis Steinfurt – Übersicht
+show_header_toggle: false
+entities:
+  - entity: sensor.kreis_steinfurt_einsatze
+    name: Einsätze gesamt
+  - entity: sensor.kreis_steinfurt_einsatze_ibbenburen
+    name: Ibbenbüren
+  - entity: sensor.kreis_steinfurt_abrufintervall
+    name: Abrufintervall

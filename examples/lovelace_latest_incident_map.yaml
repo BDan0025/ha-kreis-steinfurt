@@ -1,0 +1,8 @@
+# Karte des zuletzt veröffentlichten Einsatzes.
+# Die angezeigte Position folgt der Einstellung „Kartenposition für Einsätze“.
+type: map
+title: Letzter Einsatz – Kartenposition
+entities:
+  - entity: sensor.kreis_steinfurt_letzter_einsatz
+default_zoom: 11
+hours_to_show: 48

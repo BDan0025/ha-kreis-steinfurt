@@ -1,0 +1,8 @@
+# Einzelkarte: Einsatzstatistik gesamt und für Ibbenbüren.
+type: markdown
+title: Einsatzstatistik
+content: |-
+  | Zeitraum | Kreis Steinfurt | Ibbenbüren |
+  | :--- | ---: | ---: |
+  | Heute | {{ states('sensor.kreis_steinfurt_einsatze_heute') }} | {{ state_attr('sensor.kreis_steinfurt_einsatze_ibbenburen', 'einsatzanzahl_heute') | default('–', true) }} |
+  | Letzte 7 Tage | {{ states('sensor.kreis_steinfurt_einsatze_letzte_7_tage') }} | {{ state_attr('sensor.kreis_steinfurt_einsatze_ibbenburen', 'einsatzanzahl_letzte_7_tage') | default('–', true) }} |

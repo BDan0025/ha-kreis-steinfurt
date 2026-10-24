@@ -1,0 +1,15 @@
+# Einzelkarte: Alle aktuell laufenden Einsätze im überwachten Gebiet.
+type: markdown
+title: Aktive Alarme
+content: |-
+  {% set einsaetze = state_attr('sensor.kreis_steinfurt_einsatze', 'einsaetze') or [] %}
+  {% set aktive = einsaetze | rejectattr('status', 'equalto', 'abgeschlossen') | list %}
+  {% if aktive | count > 0 %}
+  | Beginn | Ort | Einsatzart | Zustand |
+  | :--- | :--- | :--- | :--- |
+  {% for e in aktive -%}
+  | {{ e.beginn }} | {{ e.ort }} | **{{ e.einsatzart }}** | *{{ e.status }}* |
+  {% endfor %}
+  {% else %}
+  Aktuell keine aktiven Alarme im ausgewählten Gebiet.
+  {% endif %}

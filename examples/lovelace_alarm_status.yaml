@@ -1,0 +1,11 @@
+# Einzelkarte: Aktive und abgeschlossene Einsätze.
+type: markdown
+title: Alarmstatus im überwachten Gebiet
+content: |-
+  {% set einsaetze = state_attr('sensor.kreis_steinfurt_einsatze', 'einsaetze') or [] %}
+  {% set abgeschlossen = einsaetze | selectattr('status', 'equalto', 'abgeschlossen') | list | count %}
+  {% set aktiv = (einsaetze | count) - abgeschlossen %}
+  ## {{ aktiv }} aktive Alarme
+  ## {{ abgeschlossen }} abgeschlossene Einsätze
+
+  Insgesamt: **{{ einsaetze | count }}** Einsätze im überwachten Gebiet.

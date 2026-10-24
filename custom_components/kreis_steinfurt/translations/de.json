@@ -14,12 +14,20 @@
         "data": {
           "scan_interval": "Abrufintervall in Sekunden (60 bis 3600)",
           "retention": "Einsatz-Entities löschen nach",
+          "map_location_mode": "Kartenposition für Einsätze",
           "areas": "Überwachte Kommunen"
         }
       }
     }
   },
   "selector": {
+    "map_location_mode": {
+      "options": {
+        "automatic": "Automatisch (aktuell Stadtmittelpunkt)",
+        "city": "Immer Stadtmittelpunkt",
+        "source": "Nur Koordinaten der Quelle (aktuell nicht geliefert)"
+      }
+    },
     "retention": {
       "options": {
         "48_hours": "48 Stunden",

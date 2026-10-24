@@ -1,7 +1,7 @@
 {
   "domain": "kreis_steinfurt",
   "name": "Kreis Steinfurt Einsätze",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "documentation": "https://github.com/BDan0025/ha-kreis-steinfurt",
   "requirements": [],
   "dependencies": [],

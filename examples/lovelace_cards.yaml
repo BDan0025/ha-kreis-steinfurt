@@ -1,4 +1,5 @@
-# Beispielkarten für ein Home-Assistant-Dashboard.
+# Kombiniertes Beispiel für ein Home-Assistant-Dashboard.
+# Die einzelnen Karten liegen zusätzlich als eigene Dateien in diesem Ordner.
 
 # Übersicht aller Einsätze
 type: vertical-stack
@@ -6,23 +7,23 @@ cards:
   - type: entities
     title: Kreis Steinfurt Einsätze
     entities:
-      - entity: sensor.kreis_steinfurt_einsaetze
+      - entity: sensor.kreis_steinfurt_einsatze
         name: Einsätze (48 h)
-      - entity: sensor.kreis_steinfurt_laufende_einsaetze
-        name: Laufende Einsätze
-      - entity: sensor.kreis_steinfurt_einsaetze_letzte_24_stunden
-        name: Einsätze (24 h)
+      - entity: sensor.kreis_steinfurt_einsatze_ibbenburen
+        name: Ibbenbüren
+      - entity: sensor.kreis_steinfurt_abrufintervall
+        name: Abrufintervall
 
   # Stadtname und Entity-ID bei Bedarf anpassen.
   - type: markdown
     title: Ibbenbüren – aktuelle Einsätze
     content: |
-      {% set einsaetze = state_attr('sensor.kreis_steinfurt_einsaetze_ibbenbueren', 'einsaetze') or [] %}
+      {% set einsaetze = state_attr('sensor.kreis_steinfurt_einsatze_ibbenburen', 'einsaetze') or [] %}
       {% if einsaetze | count > 0 %}
-      | Zeit | Einsatzart | Zustand |
-      | :--- | :--------- | :------ |
+      | Zeit | Sachverhalt | Zustand |
+      | :--- | :--- | :--- |
       {% for e in einsaetze -%}
-      | {{ e.beginn[11:16] }} | **{{ e.einsatzart }}** | *{{ e.status }}* |
+      | {{ e.zeit[11:16] if e.zeit is defined else e.beginn[11:16] }} | **{{ e.sachverhalt if e.sachverhalt is defined else e.einsatzart }}** | *{{ e.zustand if e.zustand is defined else e.status }}* |
       {% endfor %}
       {% else %}
       Aktuell keine gemeldeten Einsätze in Ibbenbüren.

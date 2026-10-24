@@ -1,0 +1,26 @@
+# Einzelkarte: Verteilung der gespeicherten Einsätze nach Einsatzart.
+# Benötigt die bereits auf dem Dashboard verwendete ApexCharts Card.
+type: custom:apexcharts-card
+header:
+  show: true
+  title: Einsatzarten · Historie
+  show_states: false
+chart_type: bar
+series:
+  - entity: sensor.kreis_steinfurt_einsatzarten
+    name: Einsätze
+    type: column
+    data_generator: |
+      const arten = entity.attributes.einsatzarten || {};
+      return Object.entries(arten)
+        .map(([art, werte]) => ({ x: art, y: werte.historie || 0 }))
+        .sort((a, b) => b.y - a.y);
+apex_config:
+  plotOptions:
+    bar:
+      horizontal: true
+  dataLabels:
+    enabled: true
+  xaxis:
+    title:
+      text: Anzahl Einsätze

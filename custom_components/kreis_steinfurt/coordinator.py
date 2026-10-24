@@ -16,11 +16,13 @@ from .const import (
     CONF_AREAS,
     CONF_INCIDENT_TYPES,
     CONF_RETENTION,
+    CONF_MAP_LOCATION_MODE,
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     KREIS_STEINFURT_AREAS,
     RETENTION_48_HOURS,
+    MAP_LOCATION_AUTOMATIC,
 )
 from .history import EinsatzHistory
 from .models import Einsatz
@@ -63,6 +65,11 @@ class KreisSteinfurtCoordinator(DataUpdateCoordinator):
     def retention(self) -> str:
         """Return the configured incident entity retention."""
         return self._entry.options.get(CONF_RETENTION, RETENTION_48_HOURS)
+
+    @property
+    def map_location_mode(self) -> str:
+        """Return the configured incident map position strategy."""
+        return self._entry.options.get(CONF_MAP_LOCATION_MODE, MAP_LOCATION_AUTOMATIC)
 
     @property
     def scan_interval(self) -> int:

@@ -1,0 +1,14 @@
+# Einzelkarte: Aktuelle Einsätze in Ibbenbüren.
+type: markdown
+title: Ibbenbüren – aktuelle Einsätze
+content: |-
+  {% set einsaetze = state_attr('sensor.kreis_steinfurt_einsatze_ibbenburen', 'einsaetze') or state_attr('sensor.kreis_steinfurt_einsatze_ibbenburen', 'aktuelle_einsaetze') or [] %}
+  {% if einsaetze | count > 0 %}
+  | Zeit | Sachverhalt | Zustand |
+  | :--- | :--- | :--- |
+  {% for e in einsaetze -%}
+  | {{ e.zeit[11:16] if e.zeit is defined else e.beginn[11:16] }} | **{{ e.sachverhalt if e.sachverhalt is defined else e.einsatzart }}** | *{{ e.zustand if e.zustand is defined else e.status }}* |
+  {% endfor %}
+  {% else %}
+  Aktuell keine gemeldeten Einsätze in Ibbenbüren.
+  {% endif %}
