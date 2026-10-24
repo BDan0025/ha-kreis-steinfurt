@@ -1,0 +1,48 @@
+# Zwei Listen und Statistiken für die in der Integration gewählten Gebiete
+# und Einsatzarten. Als "Manuelle Karte" in ein Dashboard einfügen.
+type: vertical-stack
+cards:
+  - type: entities
+    title: Kreis Steinfurt – Statistik
+    entities:
+      - entity: sensor.kreis_steinfurt_einsaetze
+        name: Aktuell veröffentlichte Einsätze
+      - entity: sensor.kreis_steinfurt_laufende_einsaetze
+        name: Aktive Alarme
+      - entity: sensor.kreis_steinfurt_einsaetze_heute
+        name: Einsätze heute
+      - entity: sensor.kreis_steinfurt_einsaetze_letzte_7_tage
+        name: Einsätze letzte 7 Tage
+      - entity: sensor.kreis_steinfurt_einsatzhistorie
+        name: Gespeicherte Einsätze
+
+  - type: markdown
+    title: Aktive Alarme
+    content: |
+      {% set einsaetze = state_attr('sensor.kreis_steinfurt_laufende_einsaetze', 'einsaetze') or [] %}
+      {% if einsaetze | count > 0 %}
+      | Beginn | Ort | Einsatzart | Zustand |
+      | :--- | :--- | :--- | :--- |
+      {% for e in einsaetze | sort(attribute='beginn_iso', reverse=true) -%}
+      | {{ e.beginn }} | {{ e.ort }} | **{{ e.einsatzart }}** | *{{ e.status }}* |
+      {% endfor %}
+      {% else %}
+      Aktuell keine aktiven Alarme im ausgewählten Gebiet.
+      {% endif %}
+
+  - type: markdown
+    title: Einsatzhistorie
+    content: |
+      {% set historie = state_attr('sensor.kreis_steinfurt_einsatzhistorie', 'einsaetze') or [] %}
+      {% if historie | count > 0 %}
+      | Beginn | Ort | Einsatzart | Zustand | Dauer |
+      | :--- | :--- | :--- | :--- | :--- |
+      {% for e in historie[:20] -%}
+      | {{ e.beginn }} | {{ e.ort }} | **{{ e.einsatzart }}** | {{ e.status }} | {{ e.dauer }} |
+      {% endfor %}
+      {% if historie | count > 20 %}
+      _Es werden die neuesten 20 von {{ historie | count }} gespeicherten Einsätzen gezeigt._
+      {% endif %}
+      {% else %}
+      Für das ausgewählte Gebiet ist noch keine Einsatzhistorie gespeichert.
+      {% endif %}

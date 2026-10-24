@@ -10,10 +10,11 @@
     "step": {
       "init": {
         "title": "Überwachung einstellen",
-        "description": "Wähle die zu überwachenden Kommunen und die Aufbewahrungsdauer einzelner Einsatz-Entities.",
+        "description": "Wähle Kommunen, Einsatzarten und die Aufbewahrungsdauer einzelner Einsatz-Entities.",
         "data": {
           "retention": "Einsatz-Entities löschen nach",
-          "areas": "Überwachte Kommunen"
+          "areas": "Überwachte Kommunen",
+          "incident_types": "Überwachte Einsatzarten"
         }
       }
     }
