@@ -1,8 +1,14 @@
 # Änderungsübersicht
 
+## 0.7.0
+
+- Die „Letzte 10 Einsätze“-Tabelle zeigt die Position 1 bis 10.
+- Die geografische Karte zeigt dieselben Positionsnummern direkt an ihren Markierungen.
+- Kartenpunkt-Entitäten enthalten die Position auch als Attribut.
+
 ## 0.6.1
 
-- Fehler beim Erstellen der Kartenpunkte 1 bis 10 behoben. Die Punkte liefern nun korrekt Einsatzart, Details und Kartenposition.
+- Fehler beim Erstellen und Zuordnen der Kartenpunkte 1 bis 10 behoben. Die Punkte liefern nun korrekt Einsatzart, Details und Kartenposition.
 
 ## 0.6.0
 

@@ -21,9 +21,9 @@
 
 ## Kartenpunkte der letzten zehn Einsätze
 
-Die zehn festen Entitäten `sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_1` bis `sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_10` bilden immer die zehn neuesten gespeicherten Einsätze ab. Sie sind für die Lovelace-Kartenansicht gedacht und werden bei neuen Einsätzen automatisch neu belegt.
+Die zehn festen Entitäten `sensor.kreis_steinfurt_kartenpunkt_1` bis `sensor.kreis_steinfurt_kartenpunkt_10` bilden immer die zehn neuesten gespeicherten Einsätze ab. Sie sind für die Lovelace-Kartenansicht gedacht und werden bei neuen Einsätzen automatisch neu belegt.
 
-Jeder Kartenpunkt enthält die gleichen Details wie ein einzelner Einsatz, insbesondere `ort`, `einsatzart`, `beginn`, `status`, `latitude`, `longitude` und `kartenposition`. Ohne hinterlegte Position bleibt der betreffende Punkt in der Karte unsichtbar.
+Jeder Kartenpunkt enthält die gleichen Details wie ein einzelner Einsatz, insbesondere `position`, `ort`, `einsatzart`, `beginn`, `status`, `latitude`, `longitude` und `kartenposition`. Sein Anzeigename und die Kartenmarkierung zeigen die Position 1 bis 10, passend zur „Letzte 10 Einsätze“-Tabelle. Ohne hinterlegte Position bleibt der betreffende Punkt in der Karte unsichtbar.
 
 ## Ortsübersichten
 

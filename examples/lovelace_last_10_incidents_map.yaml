@@ -5,13 +5,13 @@ type: map
 title: Letzte 10 Einsätze – Karte
 auto_fit: true
 entities:
-  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_1
-  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_2
-  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_3
-  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_4
-  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_5
-  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_6
-  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_7
-  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_8
-  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_9
-  - entity: sensor.kreis_steinfurt_kartenpunkt_letzter_einsatz_10
+  - entity: sensor.kreis_steinfurt_kartenpunkt_1
+  - entity: sensor.kreis_steinfurt_kartenpunkt_2
+  - entity: sensor.kreis_steinfurt_kartenpunkt_3
+  - entity: sensor.kreis_steinfurt_kartenpunkt_4
+  - entity: sensor.kreis_steinfurt_kartenpunkt_5
+  - entity: sensor.kreis_steinfurt_kartenpunkt_6
+  - entity: sensor.kreis_steinfurt_kartenpunkt_7
+  - entity: sensor.kreis_steinfurt_kartenpunkt_8
+  - entity: sensor.kreis_steinfurt_kartenpunkt_9
+  - entity: sensor.kreis_steinfurt_kartenpunkt_10

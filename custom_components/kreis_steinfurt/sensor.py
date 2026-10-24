@@ -722,10 +722,8 @@ class KreisSteinfurtLastIncidentMapSensor(_KreisSteinfurtCoordinatorSensor):
         """Initialize a stable marker slot for the latest-incidents map."""
         super().__init__(coordinator)
         self._position = position
-        self._attr_name = f"Kreis Steinfurt Kartenpunkt {position}"
-        self._attr_suggested_object_id = (
-            f"kreis_steinfurt_kartenpunkt_letzter_einsatz_{position}"
-        )
+        self._attr_name = str(position)
+        self._attr_suggested_object_id = f"kreis_steinfurt_kartenpunkt_{position}"
         self._attr_unique_id = (
             f"{DOMAIN}_kartenpunkt_letzter_einsatz_{position}_{entry_id}"
         )
@@ -767,7 +765,9 @@ class KreisSteinfurtLastIncidentMapSensor(_KreisSteinfurtCoordinatorSensor):
         """Return complete incident details including the map position."""
         if (einsatz := self._einsatz) is None:
             return {}
-        return _einsatz_attributes(einsatz, self.coordinator.kartenposition)
+        attributes = _einsatz_attributes(einsatz, self.coordinator.kartenposition)
+        attributes["position"] = self._position
+        return attributes
 
 
 class KreisSteinfurtEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
