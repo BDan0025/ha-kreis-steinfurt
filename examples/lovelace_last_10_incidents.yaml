@@ -5,9 +5,9 @@ title: Letzte 10 Einsätze
 content: >-
   {% set historie = state_attr('sensor.kreis_steinfurt_einsatzhistorie', 'einsaetze') or [] %}
   {% if historie | count > 0 %}
-  <table><thead><tr><th>Nr.</th><th>Beginn</th><th>Ort</th><th>Einsatzart</th><th>Zustand</th><th>Dauer</th></tr></thead><tbody>
+  <table><thead><tr><th>Nr.</th><th>Beginn</th><th>Ort</th><th>Einsatzart</th><th>Zustand</th></tr></thead><tbody>
   {% for e in historie[:10] %}
-  <tr><td>{{ loop.index }}</td><td>{{ e.beginn }}</td><td>{{ e.ort }}</td><td><strong>{{ e.einsatzart }}</strong></td><td>{{ e.status }}</td><td>{{ e.dauer | default('–') }}</td></tr>
+  <tr><td>{{ loop.index }}</td><td>{{ e.beginn }}</td><td>{{ e.ort }}</td><td><strong>{{ e.einsatzart }}</strong></td><td>{{ e.status }}</td></tr>
   {% endfor %}
   </tbody></table>
   {% else %}

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
@@ -21,7 +21,6 @@ from .models import Einsatz
 _MAX_LIST_ITEMS = 50
 _MAX_CITY_HISTORY_ITEMS = 25
 _LAST_INCIDENT_MAP_ITEMS = 10
-_COMPLETION_AGE_UPDATE_INTERVAL = timedelta(minutes=10)
 
 
 def _laufende_einsaetze(einsaetze: list[Einsatz]) -> list[Einsatz]:
@@ -35,8 +34,6 @@ def _laufende_einsaetze(einsaetze: list[Einsatz]) -> list[Einsatz]:
 
 def _einsatz_attributes(einsatz: Einsatz, kartenposition: str) -> dict[str, object]:
     """Return the public attributes for an individual incident."""
-    duration_seconds = _duration_seconds(einsatz)
-    completion_age_seconds = _completion_age_seconds(einsatz)
     city_coordinates = CITY_COORDINATES.get(einsatz.ort)
     latitude = longitude = None
     location_source = "nicht verfügbar"
@@ -57,12 +54,6 @@ def _einsatz_attributes(einsatz: Einsatz, kartenposition: str) -> dict[str, obje
         "kartenposition": location_source,
         "erstmals_gesehen": _datetime_to_iso(einsatz.erstmals_gesehen),
         "letzte_aenderung": _datetime_to_iso(einsatz.letzte_aenderung),
-        "abgeschlossen_am": _datetime_to_iso(einsatz.abgeschlossen_am),
-        "abgeschlossen_vor": _format_duration(completion_age_seconds)
-        if completion_age_seconds is not None
-        else None,
-        "dauer_sekunden": duration_seconds,
-        "dauer": _format_duration(duration_seconds),
     }
 
 
@@ -75,8 +66,6 @@ def _einsatz_list_attributes(einsatz: Einsatz) -> dict[str, object]:
         "beginn": einsatz.beginn.strftime("%d.%m.%Y %H:%M"),
         "beginn_iso": einsatz.beginn.isoformat(),
         "status": einsatz.zustand,
-        "abgeschlossen_am": _datetime_to_iso(einsatz.abgeschlossen_am),
-        "dauer": _format_duration(_duration_seconds(einsatz)),
     }
 
 
@@ -92,42 +81,6 @@ def _compact_list(
 def _datetime_to_iso(value: datetime | None) -> str | None:
     """Return an optional datetime as an ISO value."""
     return value.isoformat() if value is not None else None
-
-
-def _duration_seconds(einsatz: Einsatz) -> int:
-    """Return elapsed duration from published start to completion or now."""
-    end = einsatz.abgeschlossen_am
-    if end is None:
-        end_naive = dt_util.now().replace(tzinfo=None)
-    else:
-        end_naive = dt_util.as_local(end).replace(tzinfo=None)
-    return max(0, int((end_naive - einsatz.beginn).total_seconds()))
-
-
-def _completion_age_seconds(einsatz: Einsatz) -> int | None:
-    """Return age since completion, rounded down to ten-minute steps."""
-    if einsatz.abgeschlossen_am is None:
-        return None
-    completed = dt_util.as_local(einsatz.abgeschlossen_am).replace(tzinfo=None)
-    elapsed = max(
-        0,
-        int((dt_util.now().replace(tzinfo=None) - completed).total_seconds()),
-    )
-    interval_seconds = int(_COMPLETION_AGE_UPDATE_INTERVAL.total_seconds())
-    return elapsed // interval_seconds * interval_seconds
-
-
-def _format_duration(seconds: int) -> str:
-    """Format a duration for Home Assistant attributes."""
-    hours, remainder = divmod(seconds, 3600)
-    minutes = remainder // 60
-    return f"{hours} Std. {minutes} Min."
-
-
-def _format_short_duration(seconds: int) -> str:
-    """Format a duration as zero-padded hours and minutes."""
-    hours, remainder = divmod(seconds, 3600)
-    return f"{hours:02d}:{remainder // 60:02d}"
 
 
 def _einsaetze_in_zeitraum(einsaetze: list[Einsatz], days: int) -> list[Einsatz]:
@@ -257,6 +210,9 @@ async def async_setup_entry(
             KreisSteinfurtEinsaetzeLetzte7TageSensor(coordinator, entry.entry_id),
             KreisSteinfurtEinsatzartenSensor(coordinator, entry.entry_id),
             KreisSteinfurtAbrufintervallSensor(coordinator, entry.entry_id),
+            KreisSteinfurtQuellseitenSensor(coordinator, entry.entry_id),
+            KreisSteinfurtQuellEinsatzanzahlSensor(coordinator, entry.entry_id),
+            KreisSteinfurtLetzteAktualisierungSensor(coordinator, entry.entry_id),
             *last_incident_map_entities,
             *(
                 [
@@ -281,29 +237,6 @@ async def async_setup_entry(
             async_add_entities(new_entities)
 
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
-
-    def _async_update_completion_ages(_now: datetime) -> None:
-        """Refresh completed incident entities without polling the source."""
-        if letzter_einsatz_sensor.has_completion_time:
-            letzter_einsatz_sensor.async_write_ha_state()
-        for entity in incident_entities.values():
-            if entity.has_completion_time:
-                entity.async_write_ha_state()
-        if coordinator.city_last_incident_enabled:
-            for entity in city_last_incident_entities:
-                if entity.has_completion_time:
-                    entity.async_write_ha_state()
-        for entity in last_incident_map_entities:
-            if entity.has_completion_time:
-                entity.async_write_ha_state()
-
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass,
-            _async_update_completion_ages,
-            _COMPLETION_AGE_UPDATE_INTERVAL,
-        )
-    )
 
 
 class _KreisSteinfurtCoordinatorSensor(
@@ -391,14 +324,6 @@ class KreisSteinfurtLetzterEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
     def available(self) -> bool:
         """Make the entity unavailable when no incident is currently published."""
         return super().available and self._letzter_einsatz is not None
-
-    @property
-    def has_completion_time(self) -> bool:
-        """Return whether the latest incident has a completion timestamp."""
-        return (
-            (einsatz := self._letzter_einsatz) is not None
-            and einsatz.abgeschlossen_am is not None
-        )
 
     @property
     def native_value(self) -> str | None:
@@ -614,6 +539,80 @@ class KreisSteinfurtAbrufintervallSensor(_KreisSteinfurtCoordinatorSensor):
         return self.coordinator.scan_interval
 
 
+class KreisSteinfurtQuellseitenSensor(_KreisSteinfurtCoordinatorSensor):
+    """Expose the number of pages currently returned by the source."""
+
+    _attr_name = "Kreis Steinfurt Quellseiten"
+    _attr_suggested_object_id = "kreis_steinfurt_quellseiten"
+    _attr_icon = "mdi:book-open-page-variant-outline"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
+        """Initialize the source-page diagnostic sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_quellseiten_{entry_id}"
+
+    @property
+    def native_value(self) -> int:
+        """Return the current number of source pages."""
+        return self.coordinator.source_page_count
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        """Return details about the complete source list."""
+        return {
+            "einsaetze_auf_der_quelle": self.coordinator.source_incident_count,
+            "abgerufene_einsaetze": len(self.coordinator.data or []),
+        }
+
+
+class KreisSteinfurtQuellEinsatzanzahlSensor(_KreisSteinfurtCoordinatorSensor):
+    """Expose the total number of incidents published by the source."""
+
+    _attr_name = "Kreis Steinfurt Einsätze auf der Quelle"
+    _attr_suggested_object_id = "kreis_steinfurt_einsaetze_auf_der_quelle"
+    _attr_icon = "mdi:database-outline"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
+        """Initialize the source-count diagnostic sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_einsaetze_auf_der_quelle_{entry_id}"
+
+    @property
+    def native_value(self) -> int:
+        """Return the total count the source reports."""
+        return self.coordinator.source_incident_count
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        """Return the source-page count and successfully read entries."""
+        return {
+            "quellseiten": self.coordinator.source_page_count,
+            "abgerufene_einsaetze": len(self.coordinator.data or []),
+        }
+
+
+class KreisSteinfurtLetzteAktualisierungSensor(_KreisSteinfurtCoordinatorSensor):
+    """Expose when the integration last completed a source refresh."""
+
+    _attr_name = "Kreis Steinfurt letzte Aktualisierung"
+    _attr_suggested_object_id = "kreis_steinfurt_letzte_aktualisierung"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:clock-check-outline"
+
+    def __init__(self, coordinator: KreisSteinfurtCoordinator, entry_id: str) -> None:
+        """Initialize the refresh-time diagnostic sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_letzte_aktualisierung_{entry_id}"
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the last successful full refresh time."""
+        return self.coordinator.last_update_success_time
+
+
 class KreisSteinfurtCitySensor(_KreisSteinfurtCoordinatorSensor):
     """Count incidents for one city."""
 
@@ -680,21 +679,11 @@ class KreisSteinfurtCityLastIncidentSensor(_KreisSteinfurtCoordinatorSensor):
         )
 
     @property
-    def has_completion_time(self) -> bool:
-        """Return whether the completion-age timer applies."""
-        return (
-            (einsatz := self._letzter_einsatz) is not None
-            and einsatz.abgeschlossen_am is not None
-        )
-
-    @property
     def native_value(self) -> str | None:
-        """Return age since completion, or the running duration, as HH:MM."""
+        """Return the source status of the city's latest retained incident."""
         if (einsatz := self._letzter_einsatz) is None:
             return None
-        if (completion_age := _completion_age_seconds(einsatz)) is not None:
-            return _format_short_duration(completion_age)
-        return _format_short_duration(_duration_seconds(einsatz))
+        return einsatz.zustand
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
@@ -702,9 +691,6 @@ class KreisSteinfurtCityLastIncidentSensor(_KreisSteinfurtCoordinatorSensor):
         if (einsatz := self._letzter_einsatz) is None:
             return {"ort": self._city, "status": "kein Einsatz gespeichert"}
         attributes = _einsatz_attributes(einsatz, self.coordinator.kartenposition)
-        attributes["zeitangabe"] = (
-            "seit Abschluss" if einsatz.abgeschlossen_am is not None else "Laufzeit"
-        )
         return attributes
 
 
@@ -744,14 +730,6 @@ class KreisSteinfurtLastIncidentMapSensor(_KreisSteinfurtCoordinatorSensor):
     def available(self) -> bool:
         """Only expose markers for slots that contain an incident."""
         return super().available and self._einsatz is not None
-
-    @property
-    def has_completion_time(self) -> bool:
-        """Return whether the displayed incident is completed."""
-        return (
-            (einsatz := self._einsatz) is not None
-            and einsatz.abgeschlossen_am is not None
-        )
 
     @property
     def native_value(self) -> str | None:
@@ -799,14 +777,6 @@ class KreisSteinfurtEinsatzSensor(_KreisSteinfurtCoordinatorSensor):
     def available(self) -> bool:
         """Keep a retained entity available until it is removed by retention cleanup."""
         return super().available and self._einsatz is not None
-
-    @property
-    def has_completion_time(self) -> bool:
-        """Return whether the ten-minute age update applies to this entity."""
-        return (
-            (einsatz := self._einsatz) is not None
-            and einsatz.abgeschlossen_am is not None
-        )
 
     @property
     def native_value(self) -> str | None:

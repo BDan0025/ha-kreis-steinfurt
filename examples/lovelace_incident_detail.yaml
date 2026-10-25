@@ -24,17 +24,5 @@ entities:
     name: Beginn
   - type: attribute
     entity: sensor.kreis_steinfurt_letzter_einsatz
-    attribute: dauer
-    name: Einsatzdauer / Laufzeit bis jetzt
-  - type: attribute
-    entity: sensor.kreis_steinfurt_letzter_einsatz
-    attribute: abgeschlossen_am
-    name: Abgeschlossen am
-  - type: attribute
-    entity: sensor.kreis_steinfurt_letzter_einsatz
-    attribute: abgeschlossen_vor
-    name: Abgeschlossen vor
-  - type: attribute
-    entity: sensor.kreis_steinfurt_letzter_einsatz
     attribute: kartenposition
     name: Kartenposition

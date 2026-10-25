@@ -4,8 +4,15 @@ from __future__ import annotations
 
 from datetime import datetime
 from html.parser import HTMLParser
+import re
 
 from .models import Einsatz
+
+
+_PAGINATION_RE = re.compile(
+    r"Zeige\s+(?P<first>\d+)\s+bis\s+(?P<last>\d+)\s+von\s+(?P<total>\d+)",
+    re.IGNORECASE,
+)
 
 
 class _IncidentHTMLParser(HTMLParser):
@@ -73,3 +80,13 @@ def parse_einsaetze(html: str) -> list[Einsatz]:
         )
 
     return einsaetze
+
+
+def parse_pagination(html: str) -> tuple[int, int] | None:
+    """Return the source's total count and page size, if it is paginated."""
+    if match := _PAGINATION_RE.search(html):
+        first = int(match["first"])
+        last = int(match["last"])
+        total = int(match["total"])
+        return total, last - first + 1
+    return None

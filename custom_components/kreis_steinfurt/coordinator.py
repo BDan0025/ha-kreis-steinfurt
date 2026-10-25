@@ -42,6 +42,8 @@ class KreisSteinfurtCoordinator(DataUpdateCoordinator):
 
         self._entry = entry
         self._history = EinsatzHistory(hass, entry.entry_id)
+        self.source_page_count = 0
+        self.source_incident_count = 0
 
         self._client = KreisSteinfurtClient(
             async_get_clientsession(hass)
@@ -131,13 +133,17 @@ class KreisSteinfurtCoordinator(DataUpdateCoordinator):
         """Fetch data from the website."""
 
         try:
-            einsaetze = await self._client.async_get_einsaetze()
+            abruf = await self._client.async_get_einsaetze()
+            einsaetze = abruf.einsaetze
 
             await self._history.async_update(einsaetze, self.retention)
+            self.source_page_count = abruf.seitenanzahl
+            self.source_incident_count = abruf.einsatzanzahl_auf_der_quelle
 
             _LOGGER.debug(
-                "%s Einsätze gefunden",
+                "%s Einsätze auf %s Quellseiten gefunden",
                 len(einsaetze),
+                self.source_page_count,
             )
 
             return einsaetze

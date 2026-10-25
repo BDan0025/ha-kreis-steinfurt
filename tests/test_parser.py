@@ -8,7 +8,7 @@ import types
 package = types.ModuleType("custom_components.kreis_steinfurt")
 package.__path__ = [str(Path(__file__).parents[1] / "custom_components" / "kreis_steinfurt")]
 sys.modules.setdefault("custom_components.kreis_steinfurt", package)
-from custom_components.kreis_steinfurt.parser import parse_einsaetze
+from custom_components.kreis_steinfurt.parser import parse_einsaetze, parse_pagination
 
 
 def test_parse_einsaetze() -> None:
@@ -28,3 +28,15 @@ def test_parse_einsaetze() -> None:
 def test_parse_einsaetze_returns_empty_list_without_rows() -> None:
     """A valid response without entries is not an error."""
     assert parse_einsaetze("<html><body></body></html>") == []
+
+
+def test_parse_pagination_reads_source_total_and_page_size() -> None:
+    """The website's pagination text determines every page to retrieve."""
+    html = "<div>Zeige 51 bis 100 von 106</div>"
+
+    assert parse_pagination(html) == (106, 50)
+
+
+def test_parse_pagination_returns_none_without_page_navigation() -> None:
+    """A one-page source does not need pagination requests."""
+    assert parse_pagination("<div>Keine weiteren Seiten</div>") is None

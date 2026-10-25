@@ -77,18 +77,13 @@ class EinsatzHistory:
     ) -> Einsatz:
         """Return source data enriched with lifecycle timestamps."""
         if previous is None:
-            completed_at = now if _is_completed(current) else None
             return replace(
                 current,
                 erstmals_gesehen=now,
                 letzte_aenderung=now,
-                abgeschlossen_am=completed_at,
             )
 
         source_changed = _source_fields_changed(previous, current)
-        completed_at = previous.abgeschlossen_am
-        if completed_at is None and _is_completed(current):
-            completed_at = now
 
         return replace(
             current,
@@ -96,7 +91,6 @@ class EinsatzHistory:
             letzte_aenderung=(
                 now if source_changed or previous.letzte_aenderung is None else previous.letzte_aenderung
             ),
-            abgeschlossen_am=completed_at,
         )
 
     def retained_einsaetze(self, retention: str) -> list[Einsatz]:
@@ -126,13 +120,6 @@ class EinsatzHistory:
 
         self._einsaetze = retained
         return True
-
-
-def _is_completed(einsatz: Einsatz) -> bool:
-    """Return whether the source marks an incident as completed."""
-    return einsatz.zustand.casefold() == "abgeschlossen"
-
-
 def _source_fields_changed(previous: Einsatz, current: Einsatz) -> bool:
     """Compare only values supplied by the public incident source."""
     return any(

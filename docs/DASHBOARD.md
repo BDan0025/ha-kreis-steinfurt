@@ -27,7 +27,8 @@ Die folgenden Beispiele verwenden Ibbenbüren. Ersetze sowohl Titel als auch Ent
 | --- | --- | --- |
 | [`lovelace_ibbenbueren.yaml`](../examples/lovelace_ibbenbueren.yaml) | Ortsübersichten | aktuelle Einsätze eines Ortes |
 | [`lovelace_city_overview.yaml`](../examples/lovelace_city_overview.yaml) | Ortsübersichten | aktuell, laufend, heute und letzte 7 Tage |
-| [`lovelace_city_last_incident.yaml`](../examples/lovelace_city_last_incident.yaml) | „Letzten Einsatz je Ort“ aktiviert | letzter Einsatz mit Zeit seit Abschluss |
+| [`lovelace_city_last_incident.yaml`](../examples/lovelace_city_last_incident.yaml) | „Letzten Einsatz je Ort“ aktiviert | letzter Einsatz mit Status und Beginn laut Quelle |
+| [`lovelace_source_diagnostics.yaml`](../examples/lovelace_source_diagnostics.yaml) | keine | Quellseiten, Gesamtzahl der Quelle und letzter erfolgreicher Abruf |
 | [`lovelace_city_history.yaml`](../examples/lovelace_city_history.yaml) | Ortsübersichten und Einsatzlisten aktiviert | gespeicherte Historie eines Ortes |
 
 ## Listen und Historie

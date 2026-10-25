@@ -4,10 +4,10 @@ title: Ibbenbüren – Einsatzhistorie
 content: |-
   {% set historie = state_attr('sensor.kreis_steinfurt_einsatze_ibbenburen', 'historie') or [] %}
   {% if historie | count > 0 %}
-  | Beginn | Einsatzart | Zustand | Einsatzdauer |
+  | Beginn | Einsatzart | Zustand |
   | :--- | :--- | :--- | :--- |
   {% for e in historie[:25] -%}
-  | {{ e.beginn | default(e.zeit | default('–')) }} | **{{ e.einsatzart | default(e.sachverhalt | default('–')) }}** | {{ e.status | default(e.zustand | default('–')) }} | {{ e.dauer | default('–') }} |
+  | {{ e.beginn | default(e.zeit | default('–')) }} | **{{ e.einsatzart | default(e.sachverhalt | default('–')) }}** | {{ e.status | default(e.zustand | default('–')) }} |
   {% endfor %}
   {% else %}
   Für Ibbenbüren ist noch keine Einsatzhistorie gespeichert.

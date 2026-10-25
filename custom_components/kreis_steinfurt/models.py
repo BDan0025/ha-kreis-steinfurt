@@ -20,7 +20,6 @@ class Einsatz:
     sachverhalt: str | None = None
     erstmals_gesehen: datetime | None = None
     letzte_aenderung: datetime | None = None
-    abgeschlossen_am: datetime | None = None
 
     def as_dict(self) -> dict[str, str | None]:
         """Serialize the incident for Home Assistant storage."""
@@ -34,7 +33,6 @@ class Einsatz:
             "sachverhalt": self.sachverhalt,
             "erstmals_gesehen": _datetime_to_string(self.erstmals_gesehen),
             "letzte_aenderung": _datetime_to_string(self.letzte_aenderung),
-            "abgeschlossen_am": _datetime_to_string(self.abgeschlossen_am),
         }
 
     @classmethod
@@ -50,7 +48,6 @@ class Einsatz:
             sachverhalt=data.get("sachverhalt"),
             erstmals_gesehen=_datetime_from_string(data.get("erstmals_gesehen")),
             letzte_aenderung=_datetime_from_string(data.get("letzte_aenderung")),
-            abgeschlossen_am=_datetime_from_string(data.get("abgeschlossen_am")),
         )
 
 

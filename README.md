@@ -13,7 +13,7 @@ Home-Assistant-Integration für die öffentlich veröffentlichte Liste der [aktu
 | --- | --- |
 | Übersicht | Einsätze, laufende Alarme, heute, letzte 24 Stunden und letzte 7 Tage |
 | Orte | frei auswählbare Kommunen mit eigener Ortsübersicht |
-| Letzter Einsatz | eine feste Entität je ausgewähltem Ort, inklusive Zeit seit Abschluss |
+| Letzter Einsatz | eine feste Entität je ausgewähltem Ort mit dem zuletzt von der Quelle gemeldeten Status |
 | Historie | lokale Speicherung für 48 Stunden, 7 Tage, 1 Monat oder dauerhaft |
 | Dashboard | einzeln nutzbare Lovelace-Karten für Übersicht, Orte, Historie und Details |
 | Datenumfang | begrenzte Listenattribute und abschaltbare Zusatz-Entities |
@@ -56,6 +56,9 @@ Home-Assistant-Integration für die öffentlich veröffentlichte Liste der [aktu
 | `sensor.kreis_steinfurt_einsatzhistorie` | Anzahl der lokal gespeicherten Einsätze |
 | `sensor.kreis_steinfurt_einsatze_heute` | Einsätze seit Tagesbeginn |
 | `sensor.kreis_steinfurt_einsatze_letzte_7_tage` | Einsätze der vergangenen sieben Tage |
+| `sensor.kreis_steinfurt_quellseiten` | Anzahl der aktuell auf der Kreis-Seite gefundenen Seiten |
+| `sensor.kreis_steinfurt_einsaetze_auf_der_quelle` | Gesamtzahl der aktuell auf der Kreis-Seite veröffentlichten Einsätze |
+| `sensor.kreis_steinfurt_letzte_aktualisierung` | Zeitpunkt des letzten erfolgreichen vollständigen Abrufs |
 | `sensor.kreis_steinfurt_abrufintervall` | Eingestelltes Abrufintervall in Sekunden |
 | `sensor.kreis_steinfurt_einsatze_ibbenburen` | Ortsübersicht, hier als Beispiel Ibbenbüren |
 | `sensor.kreis_steinfurt_letzter_einsatz_ibbenburen` | Letzter gespeicherter Einsatz in Ibbenbüren |

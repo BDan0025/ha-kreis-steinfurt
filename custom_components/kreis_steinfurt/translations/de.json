@@ -24,7 +24,7 @@
         "data_description": {
           "enable_incident_entities": "Erstellt für jede Einsatznummer eine eigene Entität. Sie bleibt bis zum Ablauf der Aufbewahrungsdauer erhalten.",
           "enable_city_summaries": "Erstellt je ausgewähltem Ort eine Entität mit aktuellen Einsätzen, laufenden Alarmen sowie Tages- und Wochenzähler.",
-          "enable_city_last_incident": "Erstellt je ausgewähltem Ort eine feste Entität. Ihr Wert zeigt die Zeit seit Abschluss oder bei einem laufenden Einsatz dessen Laufzeit im Format HH:MM.",
+          "enable_city_last_incident": "Erstellt je ausgewähltem Ort eine feste Entität. Ihr Wert zeigt den zuletzt von der Quelle gemeldeten Einsatzstatus; der Beginn steht in den Attributen.",
           "include_list_attributes": "Stellt Einsatzlisten für Dashboard-Karten bereit. Ausschalten spart Datenbankplatz, Listen-Karten können dann aber keine Einträge anzeigen."
         }
       }

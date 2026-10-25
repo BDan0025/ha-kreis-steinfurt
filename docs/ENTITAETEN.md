@@ -12,12 +12,15 @@
 | `sensor.kreis_steinfurt_einsatze_letzte_7_tage` | Anzahl der letzten sieben Tage | `gesamt`, `nach_ort`, `nach_einsatzart` |
 | `sensor.kreis_steinfurt_einsatzarten` | Anzahl erkannter Einsatzarten | `einsatzarten` |
 | `sensor.kreis_steinfurt_abrufintervall` | Abrufintervall in Sekunden | – |
+| `sensor.kreis_steinfurt_quellseiten` | Anzahl aktuell gefundener Seiten der Kreis-Liste | `einsaetze_auf_der_quelle`, `abgerufene_einsaetze` |
+| `sensor.kreis_steinfurt_einsaetze_auf_der_quelle` | Gesamtzahl laut Kreis-Seite | `quellseiten`, `abgerufene_einsaetze` |
+| `sensor.kreis_steinfurt_letzte_aktualisierung` | letzter erfolgreicher vollständiger Abruf | – |
 
 ## Letzter Einsatz im gesamten Gebiet
 
-`sensor.kreis_steinfurt_letzter_einsatz` hat als Zustand den Einsatzstatus, zum Beispiel `abgeschlossen`. Die Attribute enthalten die vollständigen Daten zum neuesten Einsatz: `einsatznummer`, `einsatzart`, `ort`, `beginn`, `beginn_iso`, `status`, `strasse`, `sachverhalt`, `abgeschlossen_am`, `abgeschlossen_vor`, `dauer`, `dauer_sekunden`, `latitude`, `longitude` und `kartenposition`.
+`sensor.kreis_steinfurt_letzter_einsatz` hat als Zustand den Einsatzstatus, zum Beispiel `abgeschlossen`. Die Attribute enthalten die vollständigen Daten zum neuesten Einsatz: `einsatznummer`, `einsatzart`, `ort`, `beginn`, `beginn_iso`, `status`, `strasse`, `sachverhalt`, `latitude`, `longitude` und `kartenposition`.
 
-`dauer` bedeutet bei einem abgeschlossenen Einsatz die Zeit von Beginn bis Abschluss. Bei einem laufenden Einsatz ist es die Laufzeit bis jetzt. `abgeschlossen_vor` wird im Zehn-Minuten-Takt aktualisiert, ohne einen neuen Abruf der Quelle auszulösen.
+Die öffentliche Quelle liefert keine belastbare Abschlusszeit. Deshalb erzeugt die Integration keine Abschlusszeit, keine Einsatzdauer und keine „Zeit seit Abschluss“. `beginn` wird unverändert aus der Quelle übernommen.
 
 ## Kartenpunkte der letzten zehn Einsätze
 
@@ -44,13 +47,12 @@ sensor.kreis_steinfurt_letzter_einsatz_<ort>
 
 Beispiel: `sensor.kreis_steinfurt_letzter_einsatz_ibbenburen`.
 
-Der Zustand ist `HH:MM`:
+Der Zustand ist der zuletzt von der Quelle gemeldete Einsatzstatus:
 
-- bei abgeschlossenen Einsätzen: Zeit seit Abschluss, zum Beispiel `02:10`;
-- bei laufenden Einsätzen: bisherige Laufzeit;
+- zum Beispiel `laufend` oder `abgeschlossen`;
 - ohne gespeicherten Einsatz: `unbekannt`.
 
-Die Attribute entsprechen dem letzten Einsatz und enthalten zusätzlich `zeitangabe` mit `seit Abschluss` oder `Laufzeit`.
+Die Attribute entsprechen dem letzten Einsatz. Zeitwerte werden nur dargestellt, wenn die Quelle sie liefert.
 
 ## Einzelne Einsatz-Entities
 

@@ -5,6 +5,10 @@
 - Erste stabile Hauptversion nach erfolgreichem Praxistest.
 - HACS-Vorbereitung ergänzt: vollständige Metadaten, Deutschland-Kennzeichnung, Marken-Icon und GitHub-Prüfungen.
 - Vorlagen für Fehlerberichte und Funktionswünsche ergänzt.
+- Die gesamte paginierte Einsatzliste wird automatisch abgerufen, nicht nur die erste Seite.
+- Neue Diagnose-Entitäten für Quellseiten, Anzahl der Quell-Einsätze und Zeitpunkt des letzten erfolgreichen Abrufs.
+- Abschlusszeiten und Dauern werden nicht mehr aus Beobachtungszeitpunkten abgeleitet. Zeiten stammen ausschließlich aus der Kreis-Quelle.
+- Thread-übergreifende Aktualisierung von Entitätszuständen entfernt.
 
 ## 0.7.0
 
