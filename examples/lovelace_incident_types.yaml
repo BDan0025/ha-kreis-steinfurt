@@ -1,19 +1,23 @@
-# Einzelkarte: Einsatzarten in der aktuellen Quelle und der gespeicherten Historie.
+# Einzelkarte: Einsatzarten in der aktuellen Quelle, der letzten 24 Stunden
+# und der vergangenen sieben Tage.
 # Benötigt keine zusätzliche Custom Card.
 type: markdown
 title: Einsatzarten · Auswertung
 content: >-
-  {% set arten = state_attr('sensor.kreis_steinfurt_einsatzarten', 'einsatzarten') or {} %}
+  {% set aktuell = state_attr('sensor.kreis_steinfurt_einsatzarten', 'einsatzarten') or {} %}
+  {% set letzte_24_stunden = state_attr('sensor.kreis_steinfurt_einsatze_heute', 'nach_einsatzart') or {} %}
+  {% set letzte_7_tage = state_attr('sensor.kreis_steinfurt_einsatze_letzte_7_tage', 'nach_einsatzart') or {} %}
+  {% set arten = aktuell.keys() | list + letzte_24_stunden.keys() | list + letzte_7_tage.keys() | list %}
 
   {% if arten %}
 
-  | Einsatzart | Aktuell | Historie |
+  | Einsatzart | Aktuell | Letzte 24 Std. | Letzte 7 Tage |
 
-  | :--- | ---: | ---: |
+  | :--- | ---: | ---: | ---: |
 
-  {% for art, werte in arten.items() | sort -%}
+  {% for art in arten | unique | sort -%}
 
-  | {{ art }} | {{ werte.aktuell | default(0) }} | {{ werte.historie | default(0) }} |
+  | {{ art }} | {{ aktuell.get(art, {}).aktuell | default(0) }} | {{ letzte_24_stunden.get(art, 0) }} | {{ letzte_7_tage.get(art, 0) }} |
 
   {% endfor %}
 

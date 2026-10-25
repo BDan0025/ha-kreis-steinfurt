@@ -2,10 +2,10 @@
 type: markdown
 title: Alarmstatus im überwachten Gebiet
 content: |-
-  {% set einsaetze = state_attr('sensor.kreis_steinfurt_einsatze', 'einsaetze') or [] %}
-  {% set abgeschlossen = einsaetze | selectattr('status', 'equalto', 'abgeschlossen') | list | count %}
-  {% set aktiv = (einsaetze | count) - abgeschlossen %}
+  {% set gesamt = states('sensor.kreis_steinfurt_einsaetze') | int(0) %}
+  {% set aktiv = states('sensor.kreis_steinfurt_laufende_einsatze') | int(0) %}
+  {% set abgeschlossen = [gesamt - aktiv, 0] | max %}
   ## {{ aktiv }} aktive Alarme
   ## {{ abgeschlossen }} abgeschlossene Einsätze
 
-  Insgesamt: **{{ einsaetze | count }}** Einsätze im überwachten Gebiet.
+  Insgesamt: **{{ gesamt }}** Einsätze im überwachten Gebiet.

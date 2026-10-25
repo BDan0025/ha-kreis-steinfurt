@@ -54,7 +54,7 @@ Der Zustand ist der zuletzt von der Quelle gemeldete Einsatzstatus:
 - zum Beispiel `laufend` oder `abgeschlossen`;
 - ohne gespeicherten Einsatz: `unbekannt`.
 
-Die Attribute entsprechen dem letzten Einsatz. Zeitwerte werden nur dargestellt, wenn die Quelle sie liefert.
+Die Attribute entsprechen dem letzten Einsatz, einschließlich `als_abgeschlossen_erkannt_am`, `einsatzzeit_bis_abschluss_erkannt` und `einsatzzeit_bis_abschluss_erkannt_sekunden`, wenn die Integration den Statuswechsel selbst beobachten konnte. `als_abgeschlossen_erkannt_am` ist keine tatsächliche Endzeit.
 
 ## Einzelne Einsatz-Entities
 
@@ -65,5 +65,7 @@ sensor.kreis_steinfurt_einsatz_<einsatznummer>
 ```
 
 Beispiel: `sensor.kreis_steinfurt_einsatz_26069895`. Sie bleibt bis zum Ablauf der eingestellten Aufbewahrung bestehen. Nach dem Entfernen aus der öffentlichen Liste bleiben der letzte bekannte Status und die Details also noch verfügbar, bis die Aufbewahrung endet.
+
+Die drei Abschluss-Erkennungsattribute werden auch an den einzelnen Einsatz-Entitäten gespeichert. Sie werden erst ab dem Zeitpunkt gefüllt, ab dem die Integration den Übergang zu `abgeschlossen` selbst beobachten konnte.
 
 > Die Entity-IDs verwenden die Home-Assistant-Schreibweise ohne Umlaute, etwa `ibbenburen` statt `Ibbenbüren`.

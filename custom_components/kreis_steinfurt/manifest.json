@@ -1,12 +1,14 @@
 {
   "domain": "kreis_steinfurt",
   "name": "Kreis Steinfurt Einsätze",
-  "version": "1.0.0",
+  "codeowners": [
+    "@BDan0025"
+  ],
+  "config_flow": true,
+  "dependencies": [],
   "documentation": "https://github.com/BDan0025/ha-kreis-steinfurt",
+  "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/BDan0025/ha-kreis-steinfurt/issues",
   "requirements": [],
-  "dependencies": [],
-  "codeowners": ["@BDan0025"],
-  "config_flow": true,
-  "iot_class": "cloud_polling"
+  "version": "1.0.0"
 }

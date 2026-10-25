@@ -5,11 +5,12 @@ title: Letzte 10 Einsätze
 content: >-
   {% set historie = state_attr('sensor.kreis_steinfurt_einsatzhistorie', 'einsaetze') or [] %}
   {% if historie | count > 0 %}
-  <table><thead><tr><th>Nr.</th><th>Beginn</th><th>Ort</th><th>Einsatzart</th><th>Zustand</th></tr></thead><tbody>
+  <table><thead><tr><th>Nr.</th><th>Beginn</th><th>Ort</th><th>Einsatzart</th><th>Zustand</th><th>Einsatzzeit*</th></tr></thead><tbody>
   {% for e in historie[:10] %}
-  <tr><td>{{ loop.index }}</td><td>{{ e.beginn }}</td><td>{{ e.ort }}</td><td><strong>{{ e.einsatzart }}</strong></td><td>{{ e.status }}</td></tr>
+  <tr><td>{{ loop.index }}</td><td>{{ e.beginn }}</td><td>{{ e.ort }}</td><td><strong>{{ e.einsatzart }}</strong></td><td>{{ e.status }}</td><td>{{ e.einsatzzeit_bis_abschluss_erkannt or '–' }}</td></tr>
   {% endfor %}
   </tbody></table>
+  <small>* Bis die Integration den Status „abgeschlossen“ erstmals erkannt hat; keine echte Endzeit der Quelle.</small>
   {% else %}
   Für das ausgewählte Gebiet ist noch kein Einsatz gespeichert.
   {% endif %}

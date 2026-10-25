@@ -1,14 +1,20 @@
-# Letzter Einsatz und Alarmzähler für die in der Integration ausgewählten Kommunen.
+# Einzelkarte: letzter Einsatz im gesamten überwachten Gebiet.
+# Die Abschlusszeit wird nur gezeigt, wenn die Integration den Wechsel zu
+# "abgeschlossen" selbst beobachtet hat. Sie ist keine von der Quelle gelieferte Endzeit.
 type: markdown
 title: Letzter Einsatz im Kreis Steinfurt
-content: |
+content: |-
   {% set entity = 'sensor.kreis_steinfurt_letzter_einsatz' %}
   {% if states(entity) not in ['unknown', 'unavailable'] %}
+  **Zustand:** {{ states(entity) }}<br>
   **Einsatznummer:** {{ state_attr(entity, 'einsatznummer') | default('–') }}<br>
   **Einsatzart:** {{ state_attr(entity, 'einsatzart') | default('–') }}<br>
   **Ort:** {{ state_attr(entity, 'ort') | default('–') }}<br>
-  **Beginn:** {{ state_attr(entity, 'beginn') | default('–') }}<br>
-  **Zustand:** {{ states(entity) }}
+  **Beginn laut Quelle:** {{ state_attr(entity, 'beginn') | default('–') }}
+  {% if state_attr(entity, 'als_abgeschlossen_erkannt_am') %}<br>
+  **Als abgeschlossen erkannt:** {{ as_timestamp(state_attr(entity, 'als_abgeschlossen_erkannt_am')) | timestamp_custom('%d.%m.%Y %H:%M') }}<br>
+  **Einsatzzeit bis Abschluss erkannt:** {{ state_attr(entity, 'einsatzzeit_bis_abschluss_erkannt') }}
+  {% endif %}
   {% else %}
   Aktuell liegen für das ausgewählte Gebiet keine Einsätze vor.
   {% endif %}

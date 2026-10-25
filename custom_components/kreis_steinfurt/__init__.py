@@ -2,6 +2,7 @@
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN
@@ -11,6 +12,9 @@ from .coordinator import KreisSteinfurtCoordinator
 PLATFORMS = [
     "sensor",
 ]
+
+# The integration is set up exclusively through its config flow, not YAML.
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(

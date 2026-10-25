@@ -1,0 +1,58 @@
+# Beispiel für eine Orts-Unterseite mit allen vier Karten in einem Stapel.
+# Für einen anderen Ort alle Titel und Entity-IDs entsprechend ersetzen.
+type: vertical-stack
+cards:
+  - type: markdown
+    title: Ibbenbüren – Übersicht
+    content: |-
+      {% set entity = 'sensor.kreis_steinfurt_einsatze_ibbenburen' %}
+      | Kennzahl | Anzahl |
+      | :--- | ---: |
+      | Aktuelle Einsätze | {{ states(entity) | int(0) }} |
+      | Laufende Einsätze | {{ state_attr(entity, 'laufende_einsaetze') | int(0) }} |
+      | Einsätze heute | {{ state_attr(entity, 'einsatzanzahl_heute') | int(0) }} |
+      | Einsätze letzte 7 Tage | {{ state_attr(entity, 'einsatzanzahl_letzte_7_tage') | int(0) }} |
+  - type: markdown
+    title: Ibbenbüren – aktuelle Einsätze
+    content: |-
+      {% set einsaetze = state_attr('sensor.kreis_steinfurt_einsatze_ibbenburen', 'einsaetze') or [] %}
+      {% if einsaetze | count > 0 %}
+      | Zeit | Sachverhalt | Zustand |
+      | :--- | :--- | :--- |
+      {% for e in einsaetze -%}
+      | {{ e.beginn[11:16] }} | **{{ e.einsatzart }}** | *{{ e.status }}* |
+      {% endfor %}
+      {% else %}
+      Aktuell keine gemeldeten Einsätze in Ibbenbüren.
+      {% endif %}
+  - type: markdown
+    title: Ibbenbüren – letzter Einsatz
+    content: |-
+      {% set entity = 'sensor.kreis_steinfurt_letzter_einsatz_ibbenburen' %}
+      {% if states(entity) not in ['unknown', 'unavailable'] %}
+      **Zustand:** {{ states(entity) }}<br>
+      **Einsatznummer:** {{ state_attr(entity, 'einsatznummer') | default('–') }}<br>
+      **Einsatzart:** {{ state_attr(entity, 'einsatzart') | default('–') }}<br>
+      **Beginn laut Quelle:** {{ state_attr(entity, 'beginn') | default('–') }}
+      {% if state_attr(entity, 'als_abgeschlossen_erkannt_am') %}<br>
+      **Als abgeschlossen erkannt:** {{ as_timestamp(state_attr(entity, 'als_abgeschlossen_erkannt_am')) | timestamp_custom('%d.%m.%Y %H:%M') }}<br>
+      **Einsatzzeit bis Abschluss erkannt:** {{ state_attr(entity, 'einsatzzeit_bis_abschluss_erkannt') }}
+      {% endif %}
+      {% else %}
+      Für Ibbenbüren ist noch kein Einsatz gespeichert.
+      {% endif %}
+  - type: markdown
+    title: Ibbenbüren – Einsatzhistorie
+    content: |-
+      {% set historie = state_attr('sensor.kreis_steinfurt_einsatze_ibbenburen', 'historie') or [] %}
+      {% if historie | count > 0 %}
+      | Beginn | Einsatzart | Zustand | Einsatzzeit* |
+      | :--- | :--- | :--- | :--- |
+      {% for e in historie[:25] -%}
+      | {{ e.beginn | default('–') }} | **{{ e.einsatzart | default('–') }}** | {{ e.status | default('–') }} | {{ e.einsatzzeit_bis_abschluss_erkannt | default('–') }} |
+      {% endfor %}
+      {% else %}
+      Für Ibbenbüren ist noch keine Einsatzhistorie gespeichert.
+      {% endif %}
+
+      *bis zur Abschlusserkennung durch die Integration, keine echte Endzeit.
