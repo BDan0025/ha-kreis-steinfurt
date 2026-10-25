@@ -13,14 +13,16 @@
 | `sensor.kreis_steinfurt_einsatzarten` | Anzahl erkannter Einsatzarten | `einsatzarten` |
 | `sensor.kreis_steinfurt_abrufintervall` | Abrufintervall in Sekunden | – |
 | `sensor.kreis_steinfurt_quellseiten` | Anzahl aktuell gefundener Seiten der Kreis-Liste | `einsaetze_auf_der_quelle`, `abgerufene_einsaetze` |
-| `sensor.kreis_steinfurt_einsaetze_auf_der_quelle` | Gesamtzahl laut Kreis-Seite | `quellseiten`, `abgerufene_einsaetze` |
+| `sensor.kreis_steinfurt_einsatze_auf_der_quelle` | Gesamtzahl laut Kreis-Seite | `quellseiten`, `abgerufene_einsaetze` |
 | `sensor.kreis_steinfurt_letzte_aktualisierung` | letzter erfolgreicher vollständiger Abruf | – |
 
 ## Letzter Einsatz im gesamten Gebiet
 
 `sensor.kreis_steinfurt_letzter_einsatz` hat als Zustand den Einsatzstatus, zum Beispiel `abgeschlossen`. Die Attribute enthalten die vollständigen Daten zum neuesten Einsatz: `einsatznummer`, `einsatzart`, `ort`, `beginn`, `beginn_iso`, `status`, `strasse`, `sachverhalt`, `latitude`, `longitude` und `kartenposition`.
 
-Die öffentliche Quelle liefert keine belastbare Abschlusszeit. Deshalb erzeugt die Integration keine Abschlusszeit, keine Einsatzdauer und keine „Zeit seit Abschluss“. `beginn` wird unverändert aus der Quelle übernommen.
+Die öffentliche Quelle liefert keine belastbare Abschlusszeit. `beginn` wird unverändert aus der Quelle übernommen. Wenn die Quelle erstmals den Status `abgeschlossen` meldet, speichert die Integration stattdessen `als_abgeschlossen_erkannt_am`. Das ist der Abrufzeitpunkt und keine echte Endzeit.
+
+Wenn dieser Zeitpunkt nach `beginn` liegt, erscheinen zusätzlich `einsatzzeit_bis_abschluss_erkannt` und `einsatzzeit_bis_abschluss_erkannt_sekunden`. Beide Werte beschreiben die Zeit vom gemeldeten Beginn bis zur ersten erkannten Abschlussmeldung. Liegt der Erkennungszeitpunkt vor dem gemeldeten Beginn, bleiben beide Werte leer.
 
 ## Kartenpunkte der letzten zehn Einsätze
 

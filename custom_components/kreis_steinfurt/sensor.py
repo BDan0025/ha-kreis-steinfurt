@@ -34,6 +34,7 @@ def _laufende_einsaetze(einsaetze: list[Einsatz]) -> list[Einsatz]:
 
 def _einsatz_attributes(einsatz: Einsatz, kartenposition: str) -> dict[str, object]:
     """Return the public attributes for an individual incident."""
+    duration_seconds = _duration_until_completion_seen(einsatz)
     city_coordinates = CITY_COORDINATES.get(einsatz.ort)
     latitude = longitude = None
     location_source = "nicht verfügbar"
@@ -54,11 +55,17 @@ def _einsatz_attributes(einsatz: Einsatz, kartenposition: str) -> dict[str, obje
         "kartenposition": location_source,
         "erstmals_gesehen": _datetime_to_iso(einsatz.erstmals_gesehen),
         "letzte_aenderung": _datetime_to_iso(einsatz.letzte_aenderung),
+        "als_abgeschlossen_erkannt_am": _datetime_to_iso(
+            einsatz.als_abgeschlossen_erkannt_am
+        ),
+        "einsatzzeit_bis_abschluss_erkannt": _format_duration(duration_seconds),
+        "einsatzzeit_bis_abschluss_erkannt_sekunden": duration_seconds,
     }
 
 
 def _einsatz_list_attributes(einsatz: Einsatz) -> dict[str, object]:
     """Return compact incident data suitable for list sensor attributes."""
+    duration_seconds = _duration_until_completion_seen(einsatz)
     return {
         "einsatznummer": einsatz.einsatznr,
         "einsatzart": einsatz.einsatzart,
@@ -66,6 +73,13 @@ def _einsatz_list_attributes(einsatz: Einsatz) -> dict[str, object]:
         "beginn": einsatz.beginn.strftime("%d.%m.%Y %H:%M"),
         "beginn_iso": einsatz.beginn.isoformat(),
         "status": einsatz.zustand,
+        "als_abgeschlossen_erkannt_am": _datetime_to_iso(
+            einsatz.als_abgeschlossen_erkannt_am
+        ),
+        "einsatzzeit_bis_abschluss_erkannt": _format_duration(
+            duration_seconds
+        ),
+        "einsatzzeit_bis_abschluss_erkannt_sekunden": duration_seconds,
     }
 
 
@@ -81,6 +95,24 @@ def _compact_list(
 def _datetime_to_iso(value: datetime | None) -> str | None:
     """Return an optional datetime as an ISO value."""
     return value.isoformat() if value is not None else None
+
+
+def _duration_until_completion_seen(einsatz: Einsatz) -> int | None:
+    """Return duration until the source was first observed as completed."""
+    if einsatz.als_abgeschlossen_erkannt_am is None:
+        return None
+    seen_at = dt_util.as_local(einsatz.als_abgeschlossen_erkannt_am).replace(tzinfo=None)
+    if seen_at < einsatz.beginn:
+        return None
+    return int((seen_at - einsatz.beginn).total_seconds())
+
+
+def _format_duration(seconds: int | None) -> str | None:
+    """Format an optional duration for display in attributes."""
+    if seconds is None:
+        return None
+    hours, remainder = divmod(seconds, 3600)
+    return f"{hours} Std. {remainder // 60} Min."
 
 
 def _einsaetze_in_zeitraum(einsaetze: list[Einsatz], days: int) -> list[Einsatz]:
@@ -610,7 +642,7 @@ class KreisSteinfurtLetzteAktualisierungSensor(_KreisSteinfurtCoordinatorSensor)
     @property
     def native_value(self) -> datetime | None:
         """Return the last successful full refresh time."""
-        return self.coordinator.last_update_success_time
+        return self.coordinator.last_successful_refresh
 
 
 class KreisSteinfurtCitySensor(_KreisSteinfurtCoordinatorSensor):

@@ -5,7 +5,7 @@ show_header_toggle: false
 entities:
   - entity: sensor.kreis_steinfurt_quellseiten
     name: Gefundene Quellseiten
-  - entity: sensor.kreis_steinfurt_einsaetze_auf_der_quelle
+  - entity: sensor.kreis_steinfurt_einsatze_auf_der_quelle
     name: Einsätze auf der Quelle
   - entity: sensor.kreis_steinfurt_letzte_aktualisierung
     name: Letzter erfolgreicher Abruf

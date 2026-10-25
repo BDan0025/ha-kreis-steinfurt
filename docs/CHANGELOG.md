@@ -7,7 +7,7 @@
 - Vorlagen für Fehlerberichte und Funktionswünsche ergänzt.
 - Die gesamte paginierte Einsatzliste wird automatisch abgerufen, nicht nur die erste Seite.
 - Neue Diagnose-Entitäten für Quellseiten, Anzahl der Quell-Einsätze und Zeitpunkt des letzten erfolgreichen Abrufs.
-- Abschlusszeiten und Dauern werden nicht mehr aus Beobachtungszeitpunkten abgeleitet. Zeiten stammen ausschließlich aus der Kreis-Quelle.
+- Keine fälschlich als echte Endzeit dargestellte Abschlusszeit mehr. Stattdessen wird transparent gespeichert, wann der Status `abgeschlossen` erstmals erkannt wurde, inklusive der daraus abgeleiteten Einsatzzeit.
 - Thread-übergreifende Aktualisierung von Entitätszuständen entfernt.
 
 ## 0.7.0

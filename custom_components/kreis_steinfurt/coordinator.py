@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -10,6 +10,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util import dt as dt_util
 
 from .client import KreisSteinfurtClient
 from .const import (
@@ -44,6 +45,7 @@ class KreisSteinfurtCoordinator(DataUpdateCoordinator):
         self._history = EinsatzHistory(hass, entry.entry_id)
         self.source_page_count = 0
         self.source_incident_count = 0
+        self.last_successful_refresh: datetime | None = None
 
         self._client = KreisSteinfurtClient(
             async_get_clientsession(hass)
@@ -139,6 +141,7 @@ class KreisSteinfurtCoordinator(DataUpdateCoordinator):
             await self._history.async_update(einsaetze, self.retention)
             self.source_page_count = abruf.seitenanzahl
             self.source_incident_count = abruf.einsatzanzahl_auf_der_quelle
+            self.last_successful_refresh = dt_util.utcnow()
 
             _LOGGER.debug(
                 "%s Einsätze auf %s Quellseiten gefunden",
