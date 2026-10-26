@@ -1,6 +1,9 @@
 {
   "domain": "kreis_steinfurt",
   "name": "Kreis Steinfurt Einsätze",
+  "categories": [
+    "security_safety"
+  ],
   "codeowners": [
     "@BDan0025"
   ],
